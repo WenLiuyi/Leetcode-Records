@@ -342,6 +342,119 @@ public:
     }
 };
 
+// 6. N叉树的前序遍历：给定一个 n 叉树的根节点  root ，返回 其节点值的 前序遍历 。
+// n 叉树 在输入中按层序遍历进行序列化表示，每组子节点由空值 null 分隔
+class Node{
+public:
+    int val;
+    vector<Node *>children;
+    Node(){}
+    Node(int _val){
+        val=_val;
+    }
+    Node(int _val,vector<Node *>_children){
+        val=_val;
+        children=_children;
+    }
+};
+
+// 法一：递归
+class Solution6_1 {
+public:
+    void preorder_traversal(Node *root,vector<int> &ret){
+        if(root==nullptr) return;
+        ret.push_back(root->val);   // 中
+        vector<Node *>children=root->children;
+        
+        for(auto child:root->children){
+            preorder_traversal(child,ret);
+        }
+    }
+    vector<int> preorder(Node* root) {
+        vector<int>ret;
+        if(root==nullptr) return ret;
+        preorder_traversal(root,ret);
+        return ret;
+    }
+};
+
+// 法二：迭代
+class Solution6_2 {
+public:
+    vector<int> preorder(Node* root) {
+        vector<int>ret;
+        if(root==nullptr) return ret;
+        stack<Node *>stack;
+        stack.push(root);
+        
+        while(!stack.empty()){
+            auto node=stack.top();
+            if(node!=nullptr){
+                stack.pop();
+                int size=(node->children).size();
+                for(int i=size-1;i>=0;i--){     // 从右到左加入子节点
+                    stack.push(node->children[i]);
+                }
+                stack.push(node);stack.push(nullptr);   // 加入当前节点和空节点
+            }else{
+                stack.pop();
+                node=stack.top();stack.pop();
+                ret.push_back(node->val);
+            }
+        }
+        return ret;
+    }
+};
+
+// 7. N叉树的后序遍历:给定一个 n 叉树的根节点 root ，返回 其节点值的 后序遍历
+// n 叉树 在输入中按层序遍历进行序列化表示，每组子节点由空值 null 分隔。
+class Solution7_1 {
+public:
+    void post_traversal(Node *root,vector<int> &ret){
+        if(root==nullptr) return;
+        vector<Node *>children=root->children;
+        
+        for(auto child:root->children){
+            post_traversal(child,ret);
+        }
+        ret.push_back(root->val);   // 中
+    }
+    vector<int> postorder(Node* root) {
+        vector<int>ret;
+        if(root==nullptr) return ret;
+        post_traversal(root,ret);
+        return ret;
+    }
+};
+
+// 法二：迭代
+class Solution7_2 {
+public:
+    vector<int> postorder(Node* root) {
+        vector<int>ret;
+        if(root==nullptr) return ret;
+        stack<Node *>stack;
+        stack.push(root);
+        
+        while(!stack.empty()){
+            auto node=stack.top();
+            if(node!=nullptr){
+                stack.pop();
+                stack.push(node);stack.push(nullptr);   // 加入当前节点和空节点
+                int size=(node->children).size();
+                for(int i=size-1;i>=0;i--){     // 从右到左加入子节点
+                    stack.push(node->children[i]);
+                }
+            }else{
+                stack.pop();
+                node=stack.top();stack.pop();
+                ret.push_back(node->val);
+            }
+        }
+        return ret;
+    }
+};
+
 
 int main(int argc, const char * argv[]) {
     // insert code here...
