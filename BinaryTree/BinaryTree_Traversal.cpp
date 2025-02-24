@@ -8,6 +8,7 @@
 #include <iostream>
 #include <vector>
 #include <stack>
+#include <queue>
 using namespace std;
 
 struct TreeNode{
@@ -38,6 +39,57 @@ public:
     }
 };
 
+// 法二：迭代
+// 前序遍历：中，左，右；节点放入栈的顺序：根节点，右孩子，左孩子
+// 时间复杂度：O(n)；空间复杂度：O(n)，取决于栈空间
+class Solution1_2 {
+public:
+    vector<int> preorderTraversal(TreeNode* root) {
+        stack<TreeNode *>stack;
+        vector<int> ret;
+        
+        if(root==nullptr) return ret;
+        stack.push(root);
+        
+        while(!stack.empty()){
+            auto node=stack.top();
+            stack.pop();    // 弹出栈顶节点
+            ret.push_back(node->val);
+            if(node->right) stack.push(node->right);
+            if(node->left) stack.push(node->left);
+        }
+        return ret;
+    }
+};
+
+// 法三：统一迭代
+// 加入栈的顺序：右-左-中
+class Solution1_3{
+public:
+    vector<int> preorderTraversal(TreeNode *root){
+        vector<int>ret;
+        if(root==nullptr) return ret;
+        
+        stack<TreeNode *>stack;
+        stack.push(root);
+        
+        while(!stack.empty()){
+            TreeNode *node=stack.top();
+            if(node!=NULL){
+                stack.pop();
+                if(node->right) stack.push(node->right);    // 右
+                if(node->left) stack.push(node->left);      // 左
+                stack.push(node);stack.push(nullptr);       // 中
+            }else{
+                stack.pop();
+                node=stack.top();stack.pop();
+                ret.push_back(node->val);
+            }
+        }
+        return ret;
+    }
+};
+
 // 2. T145. 二叉树的后序遍历
 // 法一：递归
 class Solution2_1 {
@@ -52,6 +104,56 @@ public:
     vector<int> postorderTraversal(TreeNode* root) {
         vector<int> ret;
         postOrder(root,ret);
+        return ret;
+    }
+};
+
+// 法二：迭代
+// 前序遍历（中-左-右），调整代码顺序，中-右-左（节点加入栈的顺序：根节点，左孩子，右孩子）；翻转数组，左-右-中
+class Solution2_2 {
+public:
+    vector<int> postorderTraversal(TreeNode* root) {
+        vector<int>ret;
+        if(root==nullptr) return ret;
+        
+        stack<TreeNode *>stack;
+        stack.push(root);
+        while(!stack.empty()){
+            auto node=stack.top();
+            stack.pop();
+            ret.push_back(node->val);
+            if(node->left) stack.push(node->left);
+            if(node->right) stack.push(node->right);
+        }
+        reverse(ret.begin(),ret.end());
+        return ret;
+    }
+};
+
+// 法三：统一迭代
+// 加入栈的顺序：中-右-左
+class Solution2_3{
+public:
+    vector<int> postorderTraversal(TreeNode *root){
+        vector<int>ret;
+        if(root==nullptr) return ret;
+        
+        stack<TreeNode *>stack;
+        stack.push(root);
+        
+        while(!stack.empty()){
+            TreeNode *node=stack.top();
+            if(node!=NULL){
+                stack.pop();
+                stack.push(node);stack.push(nullptr);       // 中
+                if(node->right) stack.push(node->right);    // 右
+                if(node->left) stack.push(node->left);      // 左
+            }else{
+                stack.pop();
+                node=stack.top();stack.pop();
+                ret.push_back(node->val);
+            }
+        }
         return ret;
     }
 };
@@ -74,6 +176,171 @@ public:
     }
 };
 
+// 法二：迭代
+class Solution3_2 {
+public:
+    vector<int> inorderTraversal(TreeNode* root) {
+        vector<int>ret;
+        if(root==nullptr) return ret;
+        
+        stack<TreeNode *>stack;
+        while(!stack.empty() || root!=nullptr){
+            while(root!=nullptr){
+                stack.push(root);
+                root=root->left;    // 到达左子树最底部
+            }
+            root=stack.top();
+            stack.pop();
+            ret.push_back(root->val);   // 处理当前节点时，其左子树已处理完毕
+            root=root->right;
+        }
+        return ret;
+    }
+};
+
+// 法三：统一迭代法：解决访问节点（遍历节点）和处理节点（将元素放进结果集）不一致的情况：就将访问的节点放入栈中，把要处理的节点也放入栈中但是要做标记。
+// 3.1 空指针标记法：将要处理的节点放入栈后，紧接着放一个空指针标记
+// 加入栈的顺序：右-中-左
+class Solution3_3{
+public:
+    vector<int> inorderTraversal(TreeNode* root) {
+        vector<int>ret;
+        if(root==nullptr) return ret;
+        
+        stack<TreeNode *>stack;
+        stack.push(root);
+        
+        while(!stack.empty()){
+            TreeNode *node=stack.top();
+            if(node!=nullptr){
+                stack.pop();    // 栈非空，弹出栈顶节点
+                
+                if(node->right) stack.push(node->right);    // 添加右节点（空节点不入栈）
+                stack.push(node);stack.push(nullptr);   // 添加中节点和空节点（中节点访问过，但尚未处理，加入空节点标记）
+                if(node->left) stack.push(node->left);  // 添加左节点（空节点不入栈）
+            }else{
+                // 只有遇到空节点的时候，才将下一个节点放进结果集
+                stack.pop();    // 将空节点弹出
+                node=stack.top();stack.pop();   // 重新取出中节点
+                ret.push_back(node->val);   // (只有空节点弹出时）节点加入到结果集
+            }
+        }
+        return ret;
+    }
+};
+
+// 4. T226.翻转二叉树
+// 法一：递归：采用前序遍历，先交换左右孩子节点，再翻转左子树、右子树
+class Solution4_1 {
+public:
+    TreeNode* invertTree(TreeNode* root) {
+        if(root==nullptr) return root;
+        swap(root->left,root->right);
+        invertTree(root->left);
+        invertTree(root->right);
+        return root;
+    }
+};
+
+// 法二：迭代：模仿前序遍历：中-左-右
+// 节点加入栈的顺序：右-左
+class Solution4_2{
+public:
+    TreeNode* invertTree(TreeNode* root){
+        if(root==nullptr) return root;
+        stack<TreeNode *>stack;
+        stack.push(root);
+        
+        while(!stack.empty()){
+            TreeNode *node=stack.top();
+            stack.pop();
+            swap(node->left,node->right);   // 交换左右孩子节点
+            if(node->right) stack.push(node->right);    // 右
+            if(node->left) stack.push(node->left);      // 左
+        }
+        return root;
+    }
+};
+
+// 法三：统一迭代写法，模仿前序遍历：中-左-右；节点加入栈的顺序：右-左-中
+class Solution4_3{
+public:
+    TreeNode* invertTree(TreeNode* root){
+        if(root==nullptr) return root;
+        stack<TreeNode *>stack;
+        stack.push(root);
+        
+        while(!stack.empty()){
+            TreeNode *node=stack.top();
+            if(node!=nullptr){
+                stack.pop();
+                if(node->right) stack.push(node->right);
+                if(node->left) stack.push(node->left);
+                stack.push(node);stack.push(nullptr);
+            }
+            else{
+                stack.pop();
+                node=stack.top();stack.pop();
+                swap(node->left,node->right);
+            }
+        }
+        return root;
+    }
+};
+
+// 5. T2415.反转二叉树的奇数层:给你一棵 完美 二叉树的根节点 root ，请你反转这棵树中每个 奇数 层的节点值。
+// 注：节点的 层数 等于该节点到根节点之间的边数。
+
+// 法一：DFS
+// 时间复杂度：O(n)；空间复杂度：取决于递归深度，O(logn)
+class Solution_5_1 {
+public:
+    void dfs(TreeNode *root1,TreeNode *root2,bool isOdd){   // root1, root2轴对称
+        if(root1==nullptr) return;
+        if(isOdd) swap(root1->val,root2->val);  // 奇数层：交换root1,root2的值
+        dfs(root1->left,root2->right,!isOdd);
+        dfs(root1->right,root2->left,!isOdd);
+    }
+    
+    TreeNode* reverseOddLevels(TreeNode* root) {
+        if(root==nullptr) return root;
+        dfs(root->left,root->right,true);
+        return root;
+    }
+};
+
+// 法二：BFS（层序遍历，反转每个奇数层）
+// 时间复杂度：O(n)；空间复杂度：O(n)，队列中最多存在ceil(n/2)个节点
+class Solution_5_2 {
+public:
+    TreeNode* reverseOddLevels(TreeNode* root) {
+        if(root==nullptr) return root;
+        queue<TreeNode *>queue;
+        queue.emplace(root);
+        bool isOdd=false;
+        
+        while(!queue.empty()){
+            int size=queue.size();  // 当前层的节点个数
+            vector<TreeNode *>arr;  // arr存储奇数层的节点
+            for(int i=0;i<size;i++){
+                auto node=queue.front();
+                queue.pop();
+                
+                if(isOdd) arr.push_back(node);
+                
+                if(node->left) queue.emplace(node->left);
+                if(node->right) queue.emplace(node->right);
+            }
+            if(isOdd){
+                for(int l=0,r=size-1;l<r;l++,r--){
+                    swap(arr[l]->val,arr[r]->val);
+                }
+            }
+            isOdd^=true;
+        }
+        return root;
+    }
+};
 
 
 int main(int argc, const char * argv[]) {
