@@ -15,6 +15,7 @@
     深度为h，有2^h-1个节点。
 ##### 1.1.2 完全二叉树：
     除了最底层节点可能没填满外，其余每层节点数都达到最大值，并且最下面一层的节点都集中在该层最左边的若干位置。若最底层为第 h 层（h从1开始），则该层包含 1~ 2^(h-1) 个节点。
+    * 完全二叉树，一定是：平衡二叉树
 
 ##### 1.1.3 二叉搜索树
 **有序**树。
@@ -228,7 +229,123 @@ public:
     > 2. 需要搜索整棵二叉树，且需要处理递归返回值：递归函数就需要返回值；
     > 3. 要搜索其中一条符合条件的路径：那么递归一定需要返回值（路径之和I）
 
+* 二叉树的最近公共祖先
+>  给定一个二叉树, 找到该树中两个指定节点的最近公共祖先。
+ 百度百科中最近公共祖先的定义为：“对于有根树 T 的两个节点 p、q，最近公共祖先表示为一个节点 x，满足 x 是 p、q 的祖先且 x 的深度尽可能大（一个节点也可以是它自己的祖先）。”
+    * 递归：自底向上查找公共祖先，后序遍历（左-右-中）是天然回溯，根据左右子树的返回值，确定中节点的处理逻辑(左右子树是否找到p,q)
+
+若递归函数有返回值，区分要搜索一条边，还是搜索整个树：
+> 注：求二叉树的最近公共祖先，需要搜索整棵树；求二叉搜索树的最近公共祖先，搜索一条边即可
+1. 搜索一条边：
+```C
+if (递归函数(root->left)) return ;
+if (递归函数(root->right)) return ;
+```
+2. 搜索整棵树：
+```C
+left = 递归函数(root->left);
+right = 递归函数(root->right);
+left与right的逻辑处理;
+```
+
+```C
+// 递归：自底向上查找公共祖先，后序遍历（左-右-中）是天然回溯，根据左右子树的返回值，确定中节点的处理逻辑(左右子树是否找到p,q)
+// 终止条件：p，q节点或空节点
+class Solution_10 {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        // 返回值：找到的p或q；若没找到，返回nullptr
+        // 终止条件：如果遇到p或者q，就把q或者p返回；返回值不为空，就说明找到了q或者p
+        if(root==p || root==q || root==nullptr) return root;
+        TreeNode *left=lowestCommonAncestor(root->left,p,q);
+        TreeNode *right=lowestCommonAncestor(root->right,p,q);
+        
+        if(left!=nullptr&&right!=nullptr) return root;
+        
+        // 左，右子树中，有一边找到了：把该节点的结果照原样返回上去
+        if(left!=nullptr&&right==nullptr) return left;
+        else if(left==nullptr&&right!=nullptr) return right;
+        
+        else return nullptr;
+    }
+};
+```
+
 ### 4. 二叉树的修改与构造
+* T106.从中序、后序遍历序列构造二叉树（没有重复元素）
+    (1) 以后序遍历最后一个节点作为元素，找到其在中序遍历序列中的位置，作为切割点
+    (2) 切割中序数组；
+    (3) 切割后序数组(利用中序左数组大小，等于后序左数组大小)
+
+> 前序和中序可以唯一确定一棵二叉树。
+> 后序和中序可以唯一确定一棵二叉树。
+> 前序和后序不能唯一确定一棵二叉树！，因为没有中序遍历无法确定左右部分，也就是无法分割。
+```C
+// 递归：
+class Solution_1 {
+private:
+    TreeNode *traversal(vector<int>& inorder,int inorderBegin,int inorderEnd, vector<int>& postorder,int postorderBegin,int postorderEnd){
+        // 返回值：当前序列还原出的树；参数：中序区间：[inorderBegin, inorderEnd)，后序区间[postorderBegin, postorderEnd)
+        if(postorderBegin==postorderEnd) return nullptr;    // 当前为空节点
+        
+        int rootValue=postorder[postorderEnd-1];
+        TreeNode *root=new TreeNode(rootValue);   // 1. 后序数组的最后一个元素，为根节点
+        
+        if(postorderEnd-postorderBegin==1) return root; // 叶子节点
+        
+        // 2. 在中序遍历序列中，查找根节点位置
+        int delimiter;
+        for(delimiter=inorderBegin;delimiter<inorderEnd;delimiter++){
+            if(inorder[delimiter]==rootValue) break;
+        }
+        
+        // 3. 切割中序数组
+        int leftInorderBegin=inorderBegin;
+        int leftInorderEnd=delimiter;
+        int rightInorderBegin=delimiter+1;
+        int rightInorderEnd=inorderEnd;
+        
+        // 4. 切割后序数组
+        int leftPostorderBegin=postorderBegin;
+        int leftPostorderEnd=postorderBegin+delimiter-inorderBegin;
+        int rightPostorderBegin=leftPostorderEnd;
+        int rightPostorderEnd=postorderEnd-1;   // 排除最后一个节点（根节点）
+        
+        root->left=traversal(inorder,leftInorderBegin,leftInorderEnd,postorder,leftPostorderBegin,leftPostorderEnd);
+        root->right=traversal(inorder,rightInorderBegin,rightInorderEnd,postorder,rightPostorderBegin,rightPostorderEnd);
+        
+        return root;
+    }
+public:
+    TreeNode* buildTree(vector<int>& inorder, vector<int>& postorder) {
+        if(inorder.size()==0 || postorder.size()==0) return nullptr;
+        return traversal(inorder, 0, inorder.size(), postorder, 0, postorder.size());   // 左闭右开
+    }
+};
+```
+
+* 删除二叉树的节点
+```C
+class Solution {
+public:
+    TreeNode* deleteNode(TreeNode* root, int key) {
+        if (root == nullptr) return root;
+        if (root->val == key) {
+            if (root->right == nullptr) { // 这里第二次操作目标值：最终删除的作用
+                return root->left;
+            }
+            TreeNode *cur = root->right;
+            while (cur->left) {
+                cur = cur->left;
+            }
+            swap(root->val, cur->val); // 这里第一次操作目标值：交换目标值其右子树最左面节点。
+        }
+        root->left = deleteNode(root->left, key);
+        root->right = deleteNode(root->right, key);
+        return root;
+    }
+};
+```
 
 ### 5. 二叉树公共祖先问题
 
@@ -268,6 +385,118 @@ private:
         if(root==nullptr) return 0;
         nodeNum[root]=1+countNodeNum(root->left)+countNodeNum(root->right);
         return nodeNum[root];
+    }
+};
+```
+
+* 查找树的众数（不是二叉搜索树）
+```C
+class Solution {
+private:
+    void searchBST(TreeNode* cur, unordered_map<int, int>& map) { // 前序遍历
+        if (cur == NULL) return ;
+        map[cur->val]++; // 统计元素频率
+        searchBST(cur->left, map);
+        searchBST(cur->right, map);
+        return ;
+    }
+    bool static cmp (const pair<int, int>& a, const pair<int, int>& b) {
+        return a.second > b.second;
+    }
+public:
+    vector<int> findMode(TreeNode* root) {
+        unordered_map<int, int> map; // key:元素，value:出现频率
+        vector<int> result;
+        if (root == NULL) return result;
+
+        // 1. 遍历整个树，统计每个值的出现频率
+        searchBST(root, map);
+
+        // 2. 把统计的出来的出现频率（即map中的value）排个序
+        /*
+            C++中如果使用std::map或者std::multimap可以对key排序，但不能对value排序；
+            要把map转化数组即vector，再进行排序
+        */
+        vector<pair<int, int>> vec(map.begin(), map.end());
+        sort(vec.begin(), vec.end(), cmp); // 给频率排个序
+
+        // 3. 取前面的高频元素
+        result.push_back(vec[0].first);
+        for (int i = 1; i < vec.size(); i++) {
+            // 取最高的放到result数组中
+            if (vec[i].second == vec[0].second) result.push_back(vec[i].first);
+            else break;
+        }
+        return result;
+    }
+};
+```
+
+* 二叉搜索树的最近公共祖先
+```C
+// 递归：公共祖先一定在[p,q]区间内
+class Solution_7 {
+private:
+    TreeNode *traversal(TreeNode *root,TreeNode *p,TreeNode *q){
+        if(root==nullptr) return root;
+        
+        if(p->val<root->val && q->val<root->val){
+            // p,q均在当前节点root的左侧
+            TreeNode *left=traversal(root->left,p,q);
+            if(left!=nullptr) return left;  // 直接返回，保障是最近公共祖先
+        }
+        if(p->val>root->val && q->val>root->val){
+            // p,q均在当前节点root的右侧
+            TreeNode *right=traversal(root->right,p,q);
+            if(right!=nullptr) return right;
+        }
+        // 当前节点root在[p,q]区间内：root是p,q的公共祖先
+        return root;
+    }
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        return traversal(root,p,q);
+    }
+};
+```
+
+* 删除二叉搜索树的节点
+```C
+class Solution {
+public:
+    TreeNode* deleteNode(TreeNode* root, int key) {
+        if(root==nullptr) return root;  // 没找到要删除的节点
+        if(root->val==key){
+            // 1. 叶子节点
+            if(root->left==nullptr && root->right==nullptr){
+                delete root;    // 内存释放
+                return nullptr;
+            }
+            else if(root->left==nullptr){   // 2. 左孩子为空，右孩子非空：直接用右孩子替代
+                auto rightNode=root->right;
+                delete root;
+                return rightNode;
+            }
+            else if(root->right==nullptr){  // 3. 右孩子为空，左孩子非空：直接用左孩子替代
+                auto leftNode=root->left;
+                delete root;
+                return leftNode;
+            }
+            else{   // 4. 左右孩子非空：将删除节点的左子树，放到删除节点的右子树的最左面节点的左孩子的位置
+                TreeNode *cur=root->right;
+                while(cur->left!=nullptr){
+                    cur=cur->left;
+                }
+                cur->left=root->left;
+                TreeNode *tmp=root;
+                root=root->right;
+                delete tmp;
+                return root;
+            }
+        }
+        if(root->val>key) root->left=deleteNode(root->left, key);
+        if(root->val<key) root->right=deleteNode(root->right, key);
+        return root;
     }
 };
 ```

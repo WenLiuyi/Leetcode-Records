@@ -182,6 +182,232 @@ public:
     }
 };
 
+// 5. T700.二叉搜索树中的搜索:给定二叉搜索树（BST）的根节点 root 和一个整数值 val。
+// 你需要在 BST 中找到节点值等于 val 的节点。 返回以该节点为根的子树。 如果节点不存在，则返回 null 。
+// 思路：二叉搜索树有序，中序遍历得到升序序列
+
+// 法一：递归
+class Solution_5_1 {
+public:
+    TreeNode* searchBST(TreeNode* root, int val) {
+        if(root==nullptr || root->val==val) return root;
+        else if(val<root->val) return searchBST(root->left,val);
+        else return searchBST(root->right,val);
+    }
+};
+// 法二：迭代
+class Solution_5_2 {
+public:
+    TreeNode* searchBST(TreeNode* root, int val) {
+        while (root != NULL) {
+            if (root->val > val) root = root->left;
+            else if (root->val < val) root = root->right;
+            else return root;
+        }
+        return NULL;
+    }
+};
+
+// 6. T501.二叉搜索树中的众数
+/*给你一个含重复值的二叉搜索树（BST）的根节点 root ，找出并返回 BST 中的所有 众数（即，出现频率最高的元素）。
+ 如果树中有不止一个众数，可以按 任意顺序 返回。
+ */
+// 法一：递归:中序遍历，形成升序序列，
+class Solution_6_1 {
+private:
+    TreeNode *pre=nullptr;
+    int count=0,maxCount=0;     // count为cur出现频率；maxCount为最大频率
+    vector<int>ret;     // 结果：众数集合
+    
+    void searchBST(TreeNode *cur){
+        if(cur==nullptr) return;
+        
+        searchBST(cur->left);      // 1. 左
+        
+        // 2. 中
+        if(pre==nullptr) count=1;
+        else if(pre->val==cur->val){    // 与前一个节点数值相同
+            count+=1;
+        }else{
+            count=1;
+        }
+        pre=cur;    // 更新前一个节点
+        
+        if(count==maxCount) ret.push_back(cur->val);
+        else if(count>maxCount){    // 清空结果集，更新最大频率
+            maxCount=count;
+            ret.clear();
+            ret.push_back(cur->val);
+        }
+        // 3. 右
+        searchBST(cur->right);
+        return;
+    }
+public:
+    vector<int> findMode(TreeNode* root) {
+        ret.clear();
+        searchBST(root);
+        return ret;
+    }
+};
+
+// 法二：迭代
+class Solution_6_2 {
+public:
+    vector<int> findMode(TreeNode* root) {
+        TreeNode *pre=nullptr;
+        int count=0,maxCount=0;     // count为cur出现频率；maxCount为最大频率
+        vector<int>ret;     // 结果：众数集合
+        
+        stack<TreeNode *>stack;
+        while(!stack.empty() || root!=nullptr){
+            while(root!=nullptr){   // 左
+                stack.push(root);
+                root=root->left;
+            }
+            
+            root=stack.top();stack.pop();   // 中
+            if(pre==nullptr) count=1;
+            else if(pre->val==root->val) count+=1;
+            else count=1;
+            
+            if(count==maxCount) ret.push_back(root->val);
+            if(count>maxCount){
+                maxCount=count;
+                ret.clear();
+                ret.push_back(root->val);
+            }
+            
+            // 右
+            pre=root;
+            root=root->right;
+        }
+        return ret;
+    }
+};
+
+// 7. T235.二叉搜索树的最近公共祖先
+// 法一：递归：公共祖先一定在[p,q]区间内
+class Solution_7_1 {
+private:
+    TreeNode *traversal(TreeNode *root,TreeNode *p,TreeNode *q){
+        if(root==nullptr) return root;
+        
+        if(p->val<root->val && q->val<root->val){
+            // p,q均在当前节点root的左侧
+            TreeNode *left=traversal(root->left,p,q);
+            if(left!=nullptr) return left;  // 直接返回，保障是最近公共祖先
+        }
+        if(p->val>root->val && q->val>root->val){
+            // p,q均在当前节点root的右侧
+            TreeNode *right=traversal(root->right,p,q);
+            if(right!=nullptr) return right;
+        }
+        // 当前节点root在[p,q]区间内：root是p,q的公共祖先
+        return root;
+    }
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        return traversal(root,p,q);
+    }
+};
+
+// 法二：迭代（利用有序性）
+class Solution_7_2 {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        while(root!=nullptr){
+            if(p->val<root->val&&q->val<root->val) root=root->left;
+            else if(p->val>root->val&&q->val>root->val) root=root->right;
+            else return root;
+        }
+        return nullptr;
+    }
+};
+
+// 8. T701.二叉搜索树中的插入操作
+/*给定二叉搜索树（BST）的根节点 root 和要插入树中的值 value ，将值插入二叉搜索树。 返回插入后二叉搜索树的根节点。 输入数据 保证 ，新值和原始二叉搜索树中的任意节点值都不同。
+ 注意，可能存在多种有效的插入方式，只要树在插入后仍保持为二叉搜索树即可。 你可以返回 任意有效的结果 。*/
+// 1. 所有值 Node.val 是 独一无二 的; 2. 保证 val 在原始BST中不存在.
+class Solution_8 {
+public:
+    TreeNode* insertIntoBST(TreeNode* root, int val) {
+        if(root==nullptr){
+            TreeNode *newNode=new TreeNode(val);
+            return newNode;
+        }
+        TreeNode *cur=root;
+        while(cur!=nullptr){
+            if(val<cur->val){  // 加入cur的左子树
+                if(cur->left==nullptr){
+                    TreeNode *newNode=new TreeNode(val);
+                    cur->left=newNode;
+                    return root;
+                }else{
+                    cur=cur->left;
+                }
+            }else{      // 加入cur的右子树
+                if(cur->right==nullptr){
+                    TreeNode *newNode=new TreeNode(val);
+                    cur->right=newNode;
+                    return root;
+                }else{
+                    cur=cur->right;
+                }
+            }
+        }
+        return root;
+    }
+};
+
+// 9. T450.删除二叉搜索树中的节点
+/*
+ 给定一个二叉搜索树的根节点 root 和一个值 key，删除二叉搜索树中的 key 对应的节点，并保证二叉搜索树的性质不变。返回二叉搜索树（有可能被更新）的根节点的引用。
+ 一般来说，删除节点可分为两个步骤：
+ 1. 首先找到需要删除的节点；2. 如果找到了，删除它。
+ */
+
+// 法一：递归
+class Solution_9 {
+public:
+    TreeNode* deleteNode(TreeNode* root, int key) {
+        if(root==nullptr) return root;  // 没找到要删除的节点
+        if(root->val==key){
+            // 1. 叶子节点
+            if(root->left==nullptr && root->right==nullptr){
+                delete root;    // 内存释放
+                return nullptr;
+            }
+            else if(root->left==nullptr){   // 2. 左孩子为空，右孩子非空：直接用右孩子替代
+                auto rightNode=root->right;
+                delete root;
+                return rightNode;
+            }
+            else if(root->right==nullptr){  // 3. 右孩子为空，左孩子非空：直接用左孩子替代
+                auto leftNode=root->left;
+                delete root;
+                return leftNode;
+            }
+            else{   // 4. 左右孩子非空：将删除节点的左子树，放到删除节点的右子树的最左面节点的左孩子的位置
+                TreeNode *cur=root->right;
+                while(cur->left!=nullptr){
+                    cur=cur->left;
+                }
+                cur->left=root->left;
+                TreeNode *tmp=root;
+                root=root->right;
+                delete tmp;
+                return root;
+            }
+        }
+        if(root->val>key) root->left=deleteNode(root->left, key);
+        if(root->val<key) root->right=deleteNode(root->right, key);
+        return root;
+    }
+};
+
+// 10. T108.
+
 int main(int argc, const char * argv[]) {
     // insert code here...
     std::cout << "Hello, World!\n";
