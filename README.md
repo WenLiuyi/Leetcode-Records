@@ -229,48 +229,6 @@ public:
     > 2. 需要搜索整棵二叉树，且需要处理递归返回值：递归函数就需要返回值；
     > 3. 要搜索其中一条符合条件的路径：那么递归一定需要返回值（路径之和I）
 
-* 二叉树的最近公共祖先
->  给定一个二叉树, 找到该树中两个指定节点的最近公共祖先。
- 百度百科中最近公共祖先的定义为：“对于有根树 T 的两个节点 p、q，最近公共祖先表示为一个节点 x，满足 x 是 p、q 的祖先且 x 的深度尽可能大（一个节点也可以是它自己的祖先）。”
-    * 递归：自底向上查找公共祖先，后序遍历（左-右-中）是天然回溯，根据左右子树的返回值，确定中节点的处理逻辑(左右子树是否找到p,q)
-
-若递归函数有返回值，区分要搜索一条边，还是搜索整个树：
-> 注：求二叉树的最近公共祖先，需要搜索整棵树；求二叉搜索树的最近公共祖先，搜索一条边即可
-1. 搜索一条边：
-```C
-if (递归函数(root->left)) return ;
-if (递归函数(root->right)) return ;
-```
-2. 搜索整棵树：
-```C
-left = 递归函数(root->left);
-right = 递归函数(root->right);
-left与right的逻辑处理;
-```
-
-```C
-// 递归：自底向上查找公共祖先，后序遍历（左-右-中）是天然回溯，根据左右子树的返回值，确定中节点的处理逻辑(左右子树是否找到p,q)
-// 终止条件：p，q节点或空节点
-class Solution_10 {
-public:
-    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
-        // 返回值：找到的p或q；若没找到，返回nullptr
-        // 终止条件：如果遇到p或者q，就把q或者p返回；返回值不为空，就说明找到了q或者p
-        if(root==p || root==q || root==nullptr) return root;
-        TreeNode *left=lowestCommonAncestor(root->left,p,q);
-        TreeNode *right=lowestCommonAncestor(root->right,p,q);
-        
-        if(left!=nullptr&&right!=nullptr) return root;
-        
-        // 左，右子树中，有一边找到了：把该节点的结果照原样返回上去
-        if(left!=nullptr&&right==nullptr) return left;
-        else if(left==nullptr&&right!=nullptr) return right;
-        
-        else return nullptr;
-    }
-};
-```
-
 ### 4. 二叉树的修改与构造
 * T106.从中序、后序遍历序列构造二叉树（没有重复元素）
     (1) 以后序遍历最后一个节点作为元素，找到其在中序遍历序列中的位置，作为切割点
@@ -348,6 +306,75 @@ public:
 ```
 
 ### 5. 二叉树公共祖先问题
+* 二叉树的最近公共祖先
+>  给定一个二叉树, 找到该树中两个指定节点的最近公共祖先。
+ 百度百科中最近公共祖先的定义为：“对于有根树 T 的两个节点 p、q，最近公共祖先表示为一个节点 x，满足 x 是 p、q 的祖先且 x 的深度尽可能大（一个节点也可以是它自己的祖先）。”
+    * 递归：自底向上查找公共祖先，后序遍历（左-右-中）是天然回溯，根据左右子树的返回值，确定中节点的处理逻辑(左右子树是否找到p,q)
+
+若递归函数有返回值，区分要搜索一条边，还是搜索整个树：
+> 注：求二叉树的最近公共祖先，需要搜索整棵树；求二叉搜索树的最近公共祖先，搜索一条边即可
+1. 搜索一条边：
+```C
+if (递归函数(root->left)) return ;
+if (递归函数(root->right)) return ;
+```
+2. 搜索整棵树：
+```C
+left = 递归函数(root->left);
+right = 递归函数(root->right);
+left与right的逻辑处理;
+```
+
+```C
+// 递归：自底向上查找公共祖先，后序遍历（左-右-中）是天然回溯，根据左右子树的返回值，确定中节点的处理逻辑(左右子树是否找到p,q)
+// 终止条件：p，q节点或空节点
+class Solution_10 {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        // 返回值：找到的p或q；若没找到，返回nullptr
+        // 终止条件：如果遇到p或者q，就把q或者p返回；返回值不为空，就说明找到了q或者p
+        if(root==p || root==q || root==nullptr) return root;
+        TreeNode *left=lowestCommonAncestor(root->left,p,q);
+        TreeNode *right=lowestCommonAncestor(root->right,p,q);
+        
+        if(left!=nullptr&&right!=nullptr) return root;
+        
+        // 左，右子树中，有一边找到了：把该节点的结果照原样返回上去
+        if(left!=nullptr&&right==nullptr) return left;
+        else if(left==nullptr&&right!=nullptr) return right;
+        
+        else return nullptr;
+    }
+};
+```
+
+* 二叉搜索树的最近公共祖先
+```C
+// 递归：公共祖先一定在[p,q]区间内
+class Solution_7 {
+private:
+    TreeNode *traversal(TreeNode *root,TreeNode *p,TreeNode *q){
+        if(root==nullptr) return root;
+        
+        if(p->val<root->val && q->val<root->val){
+            // p,q均在当前节点root的左侧
+            TreeNode *left=traversal(root->left,p,q);
+            if(left!=nullptr) return left;  // 直接返回，保障是最近公共祖先
+        }
+        if(p->val>root->val && q->val>root->val){
+            // p,q均在当前节点root的右侧
+            TreeNode *right=traversal(root->right,p,q);
+            if(right!=nullptr) return right;
+        }
+        // 当前节点root在[p,q]区间内：root是p,q的公共祖先
+        return root;
+    }
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        return traversal(root,p,q);
+    }
+};
+```
 
 ### 6. 二叉搜索树的属性
 * 二叉树中序遍历得到升序序列，使用栈模拟实现。
@@ -432,34 +459,7 @@ public:
 };
 ```
 
-* 二叉搜索树的最近公共祖先
-```C
-// 递归：公共祖先一定在[p,q]区间内
-class Solution_7 {
-private:
-    TreeNode *traversal(TreeNode *root,TreeNode *p,TreeNode *q){
-        if(root==nullptr) return root;
-        
-        if(p->val<root->val && q->val<root->val){
-            // p,q均在当前节点root的左侧
-            TreeNode *left=traversal(root->left,p,q);
-            if(left!=nullptr) return left;  // 直接返回，保障是最近公共祖先
-        }
-        if(p->val>root->val && q->val>root->val){
-            // p,q均在当前节点root的右侧
-            TreeNode *right=traversal(root->right,p,q);
-            if(right!=nullptr) return right;
-        }
-        // 当前节点root在[p,q]区间内：root是p,q的公共祖先
-        return root;
-    }
-public:
-    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
-        return traversal(root,p,q);
-    }
-};
-```
-
+### 7. 二叉搜索树的修改与改造
 * 删除二叉搜索树的节点
 ```C
 class Solution {
@@ -500,8 +500,6 @@ public:
     }
 };
 ```
-
-### 7. 二叉搜索树的修改与改造
 
 
 ## 回溯
