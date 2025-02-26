@@ -166,6 +166,10 @@ public:
 * 求深度：从上到下，可使用前序遍历
 * 求高度：从底向上，采用后序遍历
 
+* 二叉树的最大深度：
+    1. 递归：即根节点的高度（通过后序遍历求）
+    2. 迭代：使用层序遍历，最大深度为二叉树层数
+
 * T226. 翻转二叉树：
     1. 递归：采用前序遍历：先交换左右孩子节点，再反转左子树，反转右子树。
     2. 迭代：
@@ -174,6 +178,55 @@ public:
     > 同类题：T2415.反转二叉树的奇数层
 
 * 平衡二叉树：
+    > 判断它是否是 平衡二叉树。平衡二叉树 是指该树所有节点的左右子树的高度相差不超过 1。
+    1. 递归：判断高度：采用后序遍历，自底向上，求左、右子树的高度；用-1标记不平衡树，直接返回。
+
+* 二叉树的所有路径：按 任意顺序 ，返回所有从根节点到叶子节点的路径。
+    * 采用前序遍历，递归+回溯
+```C
+class Solution {
+private:
+    void traversal(TreeNode *cur,string path,vector<string>& result){
+        path+=to_string(cur->val);  // 中(最后一个叶节点需要加入path)
+        /* 注：这一步不用回溯，因为：使用的是 string path，没有加上引用& ，即本层递归中，path + 该节点数值，但该层递归结束，上一层path的数值并不会受到任何影响。
+         不带引用，不做地址拷贝，只做内容拷贝的效果。
+         */
+        if(cur->left==nullptr && cur->right==nullptr){
+            // 终止处理逻辑：遇到叶子节点
+            result.push_back(path);
+            return;
+        }
+        if(cur->left){
+            path+="->";
+            traversal(cur->left, path, result);
+            // 回溯和递归是一一对应的
+            path.pop_back();    // 回溯'>'
+            path.pop_back();    // 回溯'-'
+        }
+        if(cur->right){
+            path+="->";
+            traversal(cur->right, path, result);
+            path.pop_back();    // 回溯'>'
+            path.pop_back();    // 回溯'-'
+        }
+    }
+public:
+    vector<string> binaryTreePaths(TreeNode* root) {
+        vector<string>result;
+        string path;
+        if(root==nullptr) return result;
+        traversal(root,path,result);
+        return result;
+    }
+};
+```
+
+* 二叉树的路径之和I和II：
+    1. 递归：叶子节点时返回；单层逻辑：递归、回溯
+    > 递归函数是否需要返回值：
+    > 1. 需要搜索整棵二叉树，且不用处理递归返回值：递归函数就不要返回值；（路径之和II）
+    > 2. 需要搜索整棵二叉树，且需要处理递归返回值：递归函数就需要返回值；
+    > 3. 要搜索其中一条符合条件的路径：那么递归一定需要返回值（路径之和I）
 
 ### 4. 二叉树的修改与构造
 
