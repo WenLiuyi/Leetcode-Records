@@ -406,7 +406,135 @@ public:
     }
 };
 
-// 10. T108.
+// 10. T669.修剪二叉搜索树
+/*给你二叉搜索树的根节点 root ，同时给定最小边界low 和最大边界 high。通过修剪二叉搜索树，使得所有节点的值在[low, high]中。修剪树 不应该 改变保留在树中的元素的相对结构 (即，如果没有被移除，原有的父代子代关系都应当保留)。 可以证明，存在 唯一的答案 。
+ 
+ 所以结果应当返回修剪好的二叉搜索树的新的根节点。注意，根节点可能会根据给定的边界发生改变。*/
+
+// 法一：递归
+// 时间复杂度：O(n)，其中 n 为二叉树的结点数目。
+// 空间复杂度：O(n)。递归栈最坏情况下需要 O(n) 的空间。
+class Solution10_1 {
+public:
+    TreeNode* trimBST(TreeNode* root, int low, int high) {
+        // 返回值：返回修改后的子树根节点
+        // 终止条件：空节点
+        if(root==nullptr) return root;
+        if(root->val<low){  // 保留右子树，删除当前节点和左子树
+            TreeNode *right=trimBST(root->right,low,high);
+            return right;
+        }
+        if(root->val>high){ // 保留左子树，删除当前节点和右子树
+            TreeNode *left=trimBST(root->left, low, high);
+            return left;
+        }
+        root->left=trimBST(root->left, low, high);
+        root->right=trimBST(root->right, low, high);
+        return root;
+    }
+};
+
+// 迭代：中序遍历：剪枝范围：[low,high]：将root移到[low,high]之间，在其左右子树中分别截取一部分
+class Solution10_2{
+public:
+    TreeNode* trimBST(TreeNode* root, int low, int high) {
+        if(root==nullptr) return root;
+        while(root!=nullptr && (root->val<low||root->val>high)){
+            if(root->val<low) root=root->right;
+            else root=root->left;
+        }
+        TreeNode *cur=root;
+        while(cur!=nullptr){    // 修剪左子树：去掉小于low的部分：获取左子树中，大于等于low的最小元素
+            while(cur->left!=nullptr && cur->left->val<low){
+                cur->left=cur->left->right;
+            }
+            cur=cur->left;
+        }
+        cur=root;
+        while(cur!=nullptr){    // 修剪右子树：去掉大于high的部分：获取右子树中，小于等于high的最大元素
+            while(cur->right!=nullptr && cur->right->val>high){
+                cur->right=cur->right->left;
+            }
+            cur=cur->right;
+        }
+        return root;
+    }
+};
+
+// 11. T08.将有序数组转换为二叉搜索树:给你一个整数数组 nums ，其中元素已经按 升序 排列，请你将其转换为一棵 平衡 二叉搜索树。
+// 法一：递归：类二分查找
+// 时间复杂度：O(n)
+// 空间复杂度：取决于递归栈深度，O(logn)
+class Solution11 {
+private:
+    TreeNode *traversal(vector<int>&nums,int left,int right){   // [left,right)
+        if(left>=right) return nullptr;
+        int mid=(left+right)/2;
+        
+        TreeNode *root=new TreeNode(nums[mid]);
+        root->left=traversal(nums,left,mid);
+        root->right=traversal(nums,mid+1,right);
+        
+        return root;
+    }
+public:
+    TreeNode* sortedArrayToBST(vector<int>& nums) {
+        if(nums.size()==0) return nullptr;
+        return traversal(nums,0,nums.size());
+    }
+};
+
+// 12. T538.把二叉搜索树转换为累加树
+/*给出二叉 搜索 树的根节点，该树的节点值各不相同，请你将其转换为累加树（Greater Sum Tree），使每个节点 node 的新值等于原树中大于或等于 node.val 的值之和。
+
+ 提醒一下，二叉搜索树满足下列约束条件：
+
+ 节点的左子树仅包含键 小于 节点键的节点。
+ 节点的右子树仅包含键 大于 节点键的节点。
+ 左右子树也必须是二叉搜索树。*/
+
+// 法一：递归：遍历顺序：右-中-左
+class Solution12_1{
+private:
+    int sum=0;      // 二叉搜索树中，大于等于当前节点的所有节点之和（右子树之和+当前节点的值）
+    void traversal(TreeNode *root){
+        if(root==nullptr) return;
+        else if(root->right!=nullptr){
+            traversal(root->right);     // 右
+        }
+        sum+=root->val;root->val=sum;   // 中
+        traversal(root->left);      // 左
+    }
+public:
+    TreeNode* convertBST(TreeNode* root) {
+        if(root==nullptr) return root;
+        traversal(root);
+        return root;
+    }
+};
+
+// 法二：迭代，中序遍历
+class Solution12_2{
+public:
+    int sum=0;
+    TreeNode* convertBST(TreeNode* root) {
+        if(root==nullptr) return root;
+        stack<TreeNode *>stack;
+        TreeNode *cur=root;
+        
+        while(!stack.empty() || cur!=nullptr){
+            while(cur!=nullptr){    // 右
+                stack.push(cur);
+                cur=cur->right;
+            }
+            auto node=stack.top();stack.pop();  // 中
+            node->val+=sum;
+            sum=node->val;
+            cur=node->left;  // 左
+        }
+        return root;
+    }
+};
 
 int main(int argc, const char * argv[]) {
     // insert code here...
