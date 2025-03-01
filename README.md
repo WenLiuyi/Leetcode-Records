@@ -3,6 +3,138 @@
 ### 2. 二分查找
 ## 链表
 ## 哈希表
+### 1. 理论基础
+* 场景：**要快速判断一个元素是否出现集合里的时候**
+* 本质：牺牲了空间、换取了时间：因为我们要使用额外的数组，set或者是map来存放数据，才能实现快速的查找
+* 使用：要使用集合来解决哈希问题的时候：
+    1. 优先使用`unordered_set`，查询和增删效率最优（均为O(1)）；
+    2. 如果需要集合有序，则使用`set`；
+    3. 如果要求不仅有序还要有重复数据的话，则使用`multiset`.
+#### 1.1 常见的三种哈希结构
+1. 数组（数组大小已知时使用，如字母异位词；不适用于哈希值少、特别分散、跨度很大的题目）
+2. set（集合）
+> 直接使用set，占用空间比数组大，而且速度要比数组慢，set将数值映射到key上的步骤需要做hash计算。
+> 因此优先用数组。
+    * 例：两数组的交集
+    ```C
+    // 2. 两个数组的交集:给定两个数组 nums1 和 nums2 ，返回 它们的 交集 。输出结果中的每个元素一定是 唯一 的。我们可以 不考虑输出结果的顺序 。
+    // 思路：使用unordered_set，分别记录：nums1,nums2中出现过的字母
+    // 时间复杂度：O(n+m)，m是因为要将set转为vector
+    // 空间复杂度：O(n)
+    class Solution_2 {
+    public:
+    vector<int> intersection(vector<int>& nums1, vector<int>& nums2) {
+        unordered_set<int>result_set;
+        unordered_set<int>nums_set(nums1.begin(),nums1.end());  // 将nums1中的所有元素，放入nums_set（使用迭代器）
+        for(int num:nums2){
+            if(nums_set.find(num)!=nums_set.end()){     // nums_set中找到了num
+                result_set.insert(num);
+            }
+        }
+        return vector<int>(result_set.begin(),result_set.end());
+    }
+    };
+    ```
+3. map（映射）
+    * 例：字母异位词分组
+    ```C
+    // 2. T49.字母异位词分组:给你一个字符串数组，请你将 字母异位词 组合在一起。可以按任意顺序返回结果列表。
+    // 思路：对每个字符串中的字母出现次数计数，哈希表的键为升序排列的字符串；值为原字符串数组
+    class Solution_2 {
+    public:
+    vector<vector<string>> groupAnagrams(vector<string>& strs) {
+        unordered_map<string,vector<string>>map;
+        
+        for(string str:strs){
+            int counts[26]={0};
+            for(char ch:str){
+                counts[ch-'a']++;
+            }
+            string key="";  // 将字符升序排列，例：a2b1c3
+            for(int i=0;i<26;i++){
+                key.push_back('a'+i);key.push_back(counts[i]);
+            }
+            map[key].push_back(str);
+        }
+        vector<vector<string>>res;
+        for(auto &pair:map){
+            res.push_back(pair.second);
+        }
+        return res;
+    }
+    };
+    ```
+#### 1.2 两数之和
+> 给定一个整数数组 nums 和一个整数目标值 target，请你在该数组中找出 和为目标值 target  的那 两个 整数，并返回它们的数组下标。
+```C
+class Solution_5 {
+public:
+    vector<int> twoSum(vector<int>& nums, int target) {
+        unordered_map<int,int>map;  // key为数值；value为下标
+        for(int i=0;i<nums.size();i++){
+            auto iter=map.find(target-nums[i]);
+            if(iter!=map.end()){    // 找到了
+                return {iter->second,i};
+            }
+            map.insert(pair<int, int>(nums[i], i));
+        }
+        return {};
+    }
+};
+```
+#### 1.3 三数之和
+> 给你一个整数数组 nums ，判断是否存在三元组 [nums[i], nums[j], nums[k]] 满足 i != j、i != k 且 j != k ，同时还满足 nums[i] + nums[j] + nums[k] == 0 。请你返回所有和为 0 且不重复的三元组。
+```C
+// 使用双指针：首先将数组排序，然后有一层for循环，i从下标0的地方开始，同时定一个下标left 定义在i+1的位置上，定义下标right 在数组结尾的位置上。
+// 如果nums[i] + nums[left] + nums[right] > 0 ，left向右移动；
+// 如果 nums[i] + nums[left] + nums[right] < 0 ，right向左移动。
+// 时间复杂度：O(n^2)；空间复杂度：O(1)
+class Solution_6 {
+public:
+    vector<vector<int>> threeSum(vector<int>& nums) {
+        vector<vector<int>> res;
+        sort(nums.begin(),nums.end());  // 升序排序
+        
+        for(int i=0;i<nums.size();i++){
+            if(nums[i]>0) return res;
+            if(i>0 && nums[i]==nums[i-1]) continue;     // 对a去重
+            
+            int left=i+1,right=nums.size()-1;
+            while(left<right){
+                if(nums[i]+nums[left]+nums[right]>0) right--;
+                else if(nums[i]+nums[left]+nums[right]<0) left++;
+                else{
+                    res.push_back(vector<int>{nums[i],nums[left],nums[right]});
+                    while(right>left && nums[right]==nums[right-1]) right--;    // 对b,c去重
+                    while(right>left && nums[left]==nums[left+1]) left++;
+                    right--;left++;
+                }
+            }
+        }
+        return res;
+    }
+};
+```
+* 拓展：四数之和
+> 三数之和的双指针解法是一层for循环num[i]为确定值，然后循环内有left和right下标作为双指针，找到nums[i] + nums[left] + nums[right] == 0。
+> 四数之和的双指针解法是两层for循环nums[k] + nums[i]为确定值，依然是循环内有left和right下标作为双指针，找出nums[k] + nums[i] + nums[left] + nums[right] == target的情况，三数之和的时间复杂度是O(n^2)，四数之和的时间复杂度是O(n^3) 。
+
+* std::unordered_set底层实现为哈希表，std::set 和std::multiset 的底层实现是红黑树。红黑树是一种平衡二叉搜索树，所以key值是有序的，但key不可以修改，改动key值会导致整棵树的错乱，所以只能删除和增加。
+
+| 集合               | 底层实现 | 是否有序 | 数值是否可以重复 | 能否更改数值 | 查询效率 | 增删效率 |
+|--------------------|----------|----------|------------------|--------------|----------|----------|
+| std::set           | 红黑树   | 有序     | 否               | 否           | O(log n) | O(log n) |
+| std::multiset      | 红黑树   | 有序     | 是               | 否           | O(log n) | O(log n) |
+| std::unordered_set | 哈希表   | 无序     | 否               | 否           | O(1)     | O(1)     |
+
+* std::unordered_map 底层实现为哈希表，std::map 和std::multimap 的底层实现是红黑树。同理，std::map 和std::multimap 的key也是有序的。
+
+| 映射                | 底层实现 | 是否有序   | 数值是否可以重复 | 能否更改数值 | 查询效率 | 增删效率 |
+|---------------------|----------|------------|------------------|--------------|----------|----------|
+| std::map           | 红黑树   | key 有序   | key 不可重复     | key 不可修改 | O(log n) | O(log n) |
+| std::multimap      | 红黑树   | key 有序   | key 可重复       | key 不可修改 | O(log n) | O(log n) |
+| std::unordered_map | 哈希表   | key 无序   | key 不可重复     | key 不可修改 | O(1)     | O(1)     |
+
 ## 字符串
 ## 双指针
 ## 滑动窗口
