@@ -10,6 +10,7 @@
     1. 优先使用`unordered_set`，查询和增删效率最优（均为O(1)）；
     2. 如果需要集合有序，则使用`set`；
     3. 如果要求不仅有序还要有重复数据的话，则使用`multiset`.
+
 | 集合               | 底层实现 | 是否有序 | 数值是否可以重复 | 能否更改数值 | 查询效率 | 增删效率 |
 |--------------------|----------|----------|------------------|--------------|----------|----------|
 | std::set           | 红黑树   | 有序     | 否               | 否           | O(log n) | O(log n) |
@@ -138,7 +139,138 @@ public:
 ## 字符串
 ## 双指针
 ## 滑动窗口
+* 滑动窗口最大值
+    > 给你一个整数数组 nums，有一个大小为 k 的滑动窗口从数组的最左侧移动到数组的最右侧。你只可以看到在滑动窗口内的 k 个数字。滑动窗口每次只向右移动一位。返回 滑动窗口中的最大值 。
+    * 滑动窗口每向右移动一位，则最左侧的元素移除，如何维护最大值？
+        1. 采用大根堆实时维护一系列元素中的最大值（优先队列实现），为了保证堆顶的元素在滑动窗口中：不断地移除堆顶的元素，直到其确实出现在滑动窗口中
+        2. 设置单调队列（严格递减）：
+            * 最大值：队首元素
+            * 移除最左侧元素：与队首元素相等时移除（即为最大值），否则不影响；
+            * 加入最右侧元素：从队尾往前，淘汰队中所有小于当前元素的元素
+        ```C
+        class Solution_6_2 {
+        private:
+        class MyQueue{      // 单调队列：从大到小
+            public:
+            deque<int>que;
+            void pop(int x){        // 比较当前要弹出的数值是否等于队列出口元素的数值，如果相等则弹出
+                // 当且仅当：队列中最大值，是需要从滑动窗口中移除的值时，才弹出
+                if(!que.empty()&&que.front()==x){
+                    que.pop_front();
+                }
+            }
+            void push(int x){   // 如果push的数值大于入口元素的数值，那么就将队列后端的数值弹出，直到push的数值小于等于队列入口元素的数值为止
+                while(!que.empty()&&x>que.back()){
+                    que.pop_back();
+                }
+                que.push_back(x);
+            }
+            int front(){        // 查询队列的最大值：直接返回队首的元素
+                return que.front();
+            }
+        };
+        public:
+        vector<int> maxSlidingWindow(vector<int>& nums, int k) {
+            MyQueue queue;  // queue为单调队列，其中的值从大到小存放
+            for(int i=0;i<k;i++) queue.push(nums[i]);
+        
+            vector<int>ans;
+            int n=nums.size();
+            ans.push_back(queue.front());
+            for(int i=k;i<n;i++){
+                queue.pop(nums[i-k]);
+                queue.push(nums[i]);
+                ans.push_back(queue.front());
+            }
+            return ans;
+        }
+        };
+        ```
 ## 栈与队列
+### 1. 理论基础
+栈和队列是STL（C++标准库）里面的两个数据结构。
+三个普遍的STL版本：
+1. HP STL 其他版本的C++ STL，一般是以HP STL为蓝本实现出来的，HP STL是C++ STL的第一个实现版本，而且开放源代码。
+2. P.J.Plauger STL 由P.J.Plauger参照HP STL实现出来的，被Visual C++编译器所采用，不是开源的。
+3. SGI STL 由Silicon Graphics Computer Systems公司参照HP STL实现，被Linux的C++编译器GCC所采用，SGI STL是开源软件，源码可读性甚高。
+
+#### std::stack, std::queue
+* std::stack 是 C++ 标准库中的一个容器适配器，它基于其他容器（默认是 std::deque）实现栈的功能（对外提供统一的接口，底层容器是可插拔的）不提供走访功能，也不提供迭代器(iterator)。 不像是set 或者map 提供迭代器iterator来遍历所有元素。
+![alt text](20210104235459376.png)
+
+> 常用的SGI STL，如果没有指定底层实现的话，默认是以deque为缺省情况下栈的底层结构。
+> 指定vector为栈的底层实现：`std::stack<int, std::vector<int> > third;  // 使用vector为底层容器的栈`
+* STL 队列也不被归类为容器，而被归类为container adapter（ 容器适配器）。
+
+##### 核心操作
+* push()：将元素压入栈顶，调用底层容器的 push_back() 方法。
+* pop()：移除栈顶元素，调用底层容器的 pop_back() 方法。
+* top()：返回栈顶元素的引用，调用底层容器的 back() 方法。
+* empty()：判断栈是否为空，调用底层容器的 empty() 方法。
+* size()：返回栈中元素的数量，调用底层容器的 size() 方法。
+
+##### 性能分析
+性能取决于底层容器的实现。
+* 如果使用 std::deque 作为底层容器：
+    * push() 和 pop() 的时间复杂度为 O(1)。
+    * top() 的时间复杂度为 O(1)。
+* 如果使用 std::vector 作为底层容器：
+    * push() 的时间复杂度为 O(1)（均摊时间复杂度，可能触发动态扩容）。
+    * pop() 的时间复杂度为 O(1)。
+    * top() 的时间复杂度为 O(1)。
+
+##### 特点
+* 后进先出（LIFO）：栈只允许在顶部插入和删除元素；
+* 不支持随机访问：不能通过索引访问栈中的元素；
+* 灵活性：可以通过更换底层容器来调整栈的行为和性能。
+
+### 2. 括号匹配
+* 栈实现的经典问题:遇到左括号时，将对应的右括号入栈；遇到右括号时，从栈顶弹出元素，观察是否匹配
+* 类题：删除字符串中所有相邻重复项（当前字符与栈顶字符相同时，从栈中弹出）
+    ```C
+    class Solution_3 {
+    public:
+    bool isValid(string s) {
+        int len=s.length();
+        if(len%2) return false;
+        stack<char>stack;
+        
+        for(int i=0;i<len;i++){
+            if(s[i]=='(') stack.push(')');
+            else if(s[i]=='[') stack.push(']');
+            else if(s[i]=='{') stack.push('}');
+            else if(stack.empty()||stack.top()!=s[i]) return false;
+            else stack.pop();
+        }
+        return stack.empty();
+    }
+    };
+    ```
+### 3. 逆波兰表达式求值
+* 逆波兰表达式相当于是二叉树中的后序遍历。设立操作数栈
+```C
+class Solution_5 {
+public:
+    int evalRPN(vector<string>& tokens) {
+        stack<long long>stack;      // 操作数栈
+        for(int i=0;i<tokens.size();i++){
+            if(tokens[i]=="+"||tokens[i]=="-"||tokens[i]=="*"||tokens[i]=="/"){
+                // 遇到运算符时：从栈中弹出两个操作数，计算后，将结果压入栈
+                long long num1=stack.top();stack.pop();     // 第二个操作数
+                long long num2=stack.top();stack.pop();     // 第一个操作数
+                if(tokens[i]=="+") stack.push(num2+num1);
+                else if(tokens[i]=="-") stack.push(num2-num1);
+                else if(tokens[i]=="*") stack.push(num2*num1);
+                else if(tokens[i]=="/") stack.push(num2/num1);
+            }else{
+                stack.push(stoll(tokens[i]));   // stoll函数：将字符串转为long long型
+            }
+        }
+        return stack.top();
+    }
+};
+```
+
 ## 二叉树
 ### 1. 理论基础
 #### 1.1 二叉树的种类
@@ -833,13 +965,13 @@ public:
     * 递归：前序，数组中间节点分割
     * 迭代：较复杂，通过三个队列来模拟
 
-    
 
 ## 回溯
 ## 贪心
 ## 分治
 ## 动态规划
 ## 单调栈
+单调队列：队中元素按严格递减排列
 ## 图
 ## 数学
 ### 1. 位运算
