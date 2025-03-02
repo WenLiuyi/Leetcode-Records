@@ -172,11 +172,6 @@ public:
  0 <= a, b, c, d < n
  a、b、c 和 d 互不相同
  nums[a] + nums[b] + nums[c] + nums[d] == target*/
-
-// 8. 四数相加II
-/*给你四个整数数组 nums1、nums2、nums3 和 nums4 ，数组长度都是 n ，请你计算有多少个元组 (i, j, k, l) 能满足：
- 0 <= i, j, k, l < n
- nums1[i] + nums2[j] + nums3[k] + nums4[l] == 0*/
 class Solution_7 {
 public:
     vector<vector<int>> fourSum(vector<int>& nums, int target) {
@@ -209,6 +204,60 @@ public:
             }
         }
         return res;
+    }
+};
+
+// 8. 四数相加II
+/*给你四个整数数组 nums1、nums2、nums3 和 nums4 ，数组长度都是 n ，请你计算有多少个元组 (i, j, k, l) 能满足：
+ 0 <= i, j, k, l < n
+ nums1[i] + nums2[j] + nums3[k] + nums4[l] == 0*/
+// -228 <= nums1[i], nums2[i], nums3[i], nums4[i] <= 2^28, 最终结果不会超过 2^31 - 1 .
+// 注：可以包含重复的四元组
+// 思路：定义unordered_map,key为a,b两数之和,value为a+b两数之和出现的次数。
+
+// 时间复杂度：O(n^2)；空间复杂度：O(n^2)
+class Solution_8 {
+public:
+    int fourSumCount(vector<int>& nums1, vector<int>& nums2, vector<int>& nums3, vector<int>& nums4) {
+        unordered_map<int,int>map;
+        for(int i=0;i<nums1.size();i++){
+            for(int j=0;j<nums2.size();j++){
+                map[nums1[i]+nums2[j]]++;
+            }
+        }
+        // count统计a+b+c+d=0的次数
+        int count=0;
+        for(int i=0;i<nums3.size();i++){
+            for(int j=0;j<nums4.size();j++){
+                if(map.find(0-nums3[i]-nums4[j])!=map.end()){
+                    count+=map[0-nums3[i]-nums4[j]];
+                }
+            }
+        }
+        return count;
+    }
+};
+
+// 9. T383.赎金信:
+/*给你两个字符串：ransomNote 和 magazine ，判断 ransomNote 能不能由 magazine 里面的字符构成。
+ 如果可以，返回 true ；否则返回 false .
+ magazine 中的每个字符只能在 ransomNote 中使用一次。
+ */
+// 思路：用数组记录magazine中，每个小写字母的出现次数
+// 时间复杂度：O(n)；空间复杂度:O(1)
+class Solution_9 {
+public:
+    bool canConstruct(string ransomNote, string magazine) {
+        int record[26]={0};
+        if(ransomNote.size()>magazine.size()) return false;
+        for(int i=0;i<magazine.length();i++){
+            record[magazine[i]-'a']++;
+        }
+        for(int j=0;j<ransomNote.size();j++){
+            record[ransomNote[j]-'a']--;
+            if(record[ransomNote[j]-'a']<0) return false;
+        }
+        return true;
     }
 };
 
