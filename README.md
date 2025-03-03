@@ -73,9 +73,50 @@ priority_queue<int, vector<int>, decltype(cmp)> customHeap(cmp);
         }
     ```
 
+## 排序
+### 1. 快速排序(QuickSort)
+* 基于**分治法**：通过选择一个基准元素(pivot)，将数组分为两部分：一部分小于基准元素，另一部分大于基准元素，然后递归地对这两部分进行排序。
+1. 选择基准元素：从数组中选择一个元素作为基准；
+2. 分区(partition)：将数组分为两个部分：
+    * 左侧：所有元素<基准元素；
+    * 右侧：所有元素>=基准元素。
+    分区通过交换元素位置实现。
+3. 递归排序：对左侧、右侧分别递归调用快排。
+4. 合并：分区后左侧部分和右侧部分已经有序，整个数组自然有序。
+### 2. 复杂度
+* 平均时间复杂度：O(n*logn)
+* 最坏时间复杂度：O(n^2)（当每次选择的基准元素都是最大或最小值时）
+* 空间复杂度：O(logn)（递归调用栈的深度）
+### 3. 优化
+### 4. 实现
+#### 4.1 递归实现
+```C
+// 1. 快速排序（迭代）
+template<typename T>
+void quickSort(T A[],int left, int right) {
+    int i = left, j = right;
+    int tmp;
+    int pivot = A[(left + right) / 2];
+
+    while (i <= j) {
+        while (A[i] < pivot) i++;
+        while (A[j] > pivot) j--;
+        if (i <= j) {
+            swap(A[i], A[j]);
+            i++;
+            j--;
+        }
+    };
+
+    if (left < j) quickSort(A,left, j);
+    if (i < right) quickSort(A,i, right);
+}
+```
+
 ## 数组
 ### 2. 二分查找
 ## 链表
+
 ## 哈希表
 ### 1. 理论基础
 * 场景：**要快速判断一个元素是否出现集合里的时候**
