@@ -258,6 +258,140 @@ public:
     }
 };
 
+// 7. 简化路径
+/*给你一个字符串 path ，表示指向某一文件或目录的 Unix 风格 绝对路径 （以 '/' 开头），请你将其转化为 更加简洁的规范路径。
+ 在 Unix 风格的文件系统中规则如下：
+ 1. 一个点 '.' 表示当前目录本身。
+ 2. 此外，两个点 '..' 表示将目录切换到上一级（指向父目录）。
+ 3. 任意多个连续的斜杠（即，'//' 或 '///'）都被视为单个斜杠 '/'。
+ 4. 任何其他格式的点（例如，'...' 或 '....'）均被视为有效的文件/目录名称。
+ 
+ 返回的 简化路径 必须遵循下述格式：
+ 1. 始终以斜杠 '/' 开头。
+ 2. 两个目录名之间必须只有一个斜杠 '/' 。
+ 3. 最后一个目录名（如果存在）不能 以 '/' 结尾。
+ 4. 此外，路径仅包含从根目录到目标文件或目录的路径上的目录（即，不含 '.' 或 '..'）。
+ 5. 返回简化后得到的 规范路径 。*/
+
+// 思路：用栈存储目录名:遇到目录名，压入栈；遇到两个连续的.，从栈中弹出一个目录名（返回到上一级）
+class Solution_7 {
+public:
+    vector<string> split(const string &s, char delim){  // 使用delim划分字符串s
+        vector<string>res;
+        string cur="";
+        int len=s.length();
+        for(int i=0;i<len;i++){
+            if(s[i]==delim){
+                res.push_back(cur);
+                cur.clear();
+            }else{
+                cur+=s[i];
+            }
+        }
+        res.push_back(cur);
+        return res;
+    }
+    string simplifyPath(string path) {
+        vector<string>names=split(path,'/');
+        vector<string>stack;
+        // 1. 将目录名压入栈
+        for(string &name:names){
+            if(name==".."){
+                if(!stack.empty()) stack.pop_back();
+            }else if(!name.empty() && name!="."){
+                stack.push_back(move(name));
+                /*std::move函数：实现 移动语义。它的作用是将一个对象的资源所有权从一个对象转移到另一个对象，而不是进行深拷贝。*/
+            }
+        }
+        
+        string ans="";
+        if(stack.empty()) return "/";
+        else{
+            for(string &name:stack){
+                ans+="/"+move(name);
+            }
+        }
+        return ans;
+    };
+};
+
+// 8. T224.基本计算器:给你一个字符串表达式 s ，请你实现一个基本计算器来计算并返回它的值。
+/*
+ 1 <= s.length <= 3 * 105
+ s 由数字、'+'、'-'、'('、')'、和 ' ' 组成
+ s 表示一个有效的表达式
+ '+' 不能用作一元运算(例如， "+1" 和 "+(2 + 3)" 无效)
+ '-' 可以用作一元运算(即 "-1" 和 "-(2 + 3)" 是有效的)
+ 输入中不存在两个连续的操作符
+ 每个数字和运行的计算将适合于一个有符号的 32位 整数*/
+
+// 关键：确定当前的符号为+或-：设立操作符栈，记录：当前括号层级的sign
+// 时间复杂度：O(n)；空间复杂度：O(n)
+class Solution_8 {
+public:
+    int calculate(string s) {
+        stack<int>ops;     // 记录：当前括号层级的sign
+        int n=s.length(),res=0,sign=1;
+        ops.push(sign);
+        
+        int i=0;
+        while(i<n){
+            if(s[i]==' ') i++;
+            else if(s[i]=='+') {sign=ops.top();i++;}
+            else if(s[i]=='-') {sign=-ops.top();i++;}
+            else if(s[i]=='(') {
+                ops.push(sign);     // 将当前的 sign 取值压入栈中
+                i++;
+            }
+            else if(s[i]==')') {    // 从栈中弹出一个元素
+                ops.pop();
+                i++;
+            }
+            else{
+                long long num=0;
+                while(i<n && '0'<=s[i] && s[i]<='9'){
+                    num=num*10+(s[i]-'0');
+                    i++;
+                }
+                res+=sign*num;
+            }
+        }
+        return res;
+    }
+};
+
+// 9. T155.最小栈
+/*设计一个支持 push ，pop ，top 操作，并能在常数时间内检索到最小元素的栈。
+ 实现 MinStack 类:
+ MinStack() 初始化堆栈对象。
+ void push(int val) 将元素val推入堆栈。
+ void pop() 删除堆栈顶部的元素。
+ int top() 获取堆栈顶部的元素。
+ int getMin() 获取堆栈中的最小元素。*/
+// 思路：设置一个辅助栈，与元素栈同步插入与删除，用于存储与每个元素对应的最小值。
+// 时间复杂度：对于题目中的所有操作，时间复杂度均为 O(1)
+// 空间复杂度：O(n)
+class MinStack {
+public:
+    stack<int>stack,min_stack;
+    MinStack() {
+        min_stack.push(INT_MAX);
+    }
+    void push(int val) {
+        stack.push(val);
+        min_stack.push(min(val,min_stack.top()));
+    }
+    void pop() {
+        stack.pop();
+        min_stack.pop();
+    }
+    int top() {
+        return stack.top();
+    }
+    int getMin() {
+        return min_stack.top();
+    }
+};
 
 int main(int argc, const char * argv[]) {
     // insert code here...

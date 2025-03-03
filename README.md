@@ -64,6 +64,11 @@ priority_queue<int, vector<int>, decltype(cmp)> customHeap(cmp);
     }
     };
     ```
+2. 任务调度：按照优先级调度任务
+
+3. Dijkstra算法：在图的单源最短路径算法中，优先队列用于选择当前距离最短的节点
+
+4. 合并K个有序链表
 
 ### 2. 映射(map,multimap,unordered_map)
 * 遍历map(采用迭代器)：
@@ -157,7 +162,7 @@ int get_random(int left, int right){
 2. set（集合）
 > 直接使用set，占用空间比数组大，而且速度要比数组慢，set将数值映射到key上的步骤需要做hash计算。
 > 因此优先用数组。
-    * 例：两数组的交集
+* 例：两数组的交集
     ```C
     // 2. 两个数组的交集:给定两个数组 nums1 和 nums2 ，返回 它们的 交集 。输出结果中的每个元素一定是 唯一 的。我们可以 不考虑输出结果的顺序 。
     // 思路：使用unordered_set，分别记录：nums1,nums2中出现过的字母
