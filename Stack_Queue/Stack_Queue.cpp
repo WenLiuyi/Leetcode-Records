@@ -24,7 +24,7 @@ public:
     stack<int>stIn;
     stack<int>stOut;   // 用两个栈实现队列
     
-    MyQueue() {}
+    MyQueue_1() {}
     void push(int x) {
         stIn.push(x);   // x放入stIn
     }
@@ -257,6 +257,7 @@ public:
         return ans;
     }
 };
+
 
 int main(int argc, const char * argv[]) {
     // insert code here...

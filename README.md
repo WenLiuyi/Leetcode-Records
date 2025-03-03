@@ -1,4 +1,78 @@
 # Leetcode-C++
+## STL数据结构
+### 1. 优先队列(priority_queue)
+* 容器适配器：对外接口只是从队头取元素，从队尾添加元素，再无其他取元素的方式。
+* 其中的元素按照某种优先级顺序排列，每次访问或删除的元素都是优先级最高的元素。
+#### 1.1 基本特性
+1. 默认行为：std::priority_queue 是一个**最大堆**，即优先级最高的元素是最大的元素。
+2. 底层容器：std::priority_queue 默认使用 **std::vector**作为底层容器，但也可以指定其他容器（如 std::deque）。
+3. 核心操作：
+    * `push()`：插入元素--O(logn)
+    * `pop()`：删除优先级最高的元素--O(logn)
+    * `top()`：访问优先级最高的元素--O(1)
+    * `empty()`：检查队列是否为空--O(1)
+    * `size()`：返回队列中元素的数量--O(1)
+#### 1.2 定义与初始化
+1. 默认最大堆：
+```C
+#include<queue>
+using namespace std;
+priority_queue<int>maxHeap;
+priority_queue<int, vector<int>, greater<int>> minHeap; // 通过传递自定义比较函数（如 std::greater）实现最小堆
+```
+2. 自定义优先级规则：
+* 注意：left>right建立小顶堆（快排：快排的cmp函数的时候，return left>right 就是从大到小，return left<right 就是从小到大）
+```C
+#include <queue>
+#include <functional>
+using namespace std;
+auto cmp = [](int a, int b) { return a > b; }; // 自定义比较函数
+priority_queue<int, vector<int>, decltype(cmp)> customHeap(cmp);
+```
+#### 1.3 应用场景
+1. Top K问题：使用优先队列可以高效地找到数组中最大或最小的 K 个元素。
+    * 时间复杂度：O(n*logk)；空间复杂度：O(n)
+    ```C
+    class Solution_7 {
+    public:
+    class myCompare{
+    public:
+        bool operator()(const pair<int,int>&lhs,const pair<int,int>&rhs){
+            return lhs.second>rhs.second;   // 满足时返回值1：lhs排在rhs之后
+        }
+    };
+    vector<int> topKFrequent(vector<int>& nums, int k) {
+        // 1. 统计元素出现的频率：遍历数组nums，使用map记录
+        unordered_map<int,int>map;  // key为元素值；value为出现次数
+        int n=nums.size();
+        for(int i=0;i<n;i++){
+            map[nums[i]]++;
+        }
+        // 2. 建立一个大小为k的小顶堆：每次插入一个新的值，弹出最小的元素（若使用大顶堆，则需要把所有元素都进行排序，而小顶堆只排序k个元素），这是由于：优先队列只能弹出队首（即堆顶）元素
+        priority_queue<pair<int,int>,vector<pair<int,int>>,myCompare>queue;
+        for(unordered_map<int, int>::iterator it=map.begin();it!=map.end();it++){   // 采用迭代器遍历map
+            queue.push(*it);
+            if(queue.size()>k) queue.pop();     // 弹出队首（即堆顶的最小元素）
+        }
+        // 3. 找出前k个高频元素：倒序输出
+        vector<int>res(k);
+        for(int i=k-1;i>=0;i--){
+            res[i]=queue.top().first;
+            queue.pop();
+        }
+        return res;
+    }
+    };
+    ```
+
+### 2. 映射(map,multimap,unordered_map)
+* 遍历map(采用迭代器)：
+    ```C
+    for(unordered_map<int, int>::iterator it=map.begin();it!=map.end();it++){   // 采用迭代器遍历map
+        // *it获取map中的键值对
+        }
+    ```
+
 ## 数组
 ### 2. 二分查找
 ## 链表
