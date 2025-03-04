@@ -272,6 +272,91 @@ public:
     }
 };
 
+// 9. 螺旋矩阵
+class Solution_9 {
+public:
+    vector<int> spiralOrder(vector<vector<int>>& matrix) {
+        vector<int>res;
+        int startX=0,startY=0;  // 每一层循环的起始位置
+        int m=matrix.size(),n=matrix[0].size();
+        int loop=min(m/2,n/2);  // 循环个数
+        int count=1,offset=1;   // offset为每一条边的遍历长度
+        int i=0,j=0;
+        
+        while(loop--){
+            i=startX;j=startY;
+            for(;j<n-offset;j++){       // 模拟上行从左到右
+                res.push_back(matrix[i][j]);
+            }
+            for(;i<m-offset;i++){       // 模拟右列从上到下
+                res.push_back(matrix[i][j]);
+            }
+            for(;j>startY;j--){         // 模拟下行从右到左
+                res.push_back(matrix[i][j]);
+            }
+            for(;i>startX;i--){         // 模拟左列从下到上
+                res.push_back(matrix[i][j]);
+            }
+            startX++;startY++;
+            offset++;
+        }
+        
+        if(min(m,n)%2){
+            i=startX,j=startY;
+            if(m<=n){
+                for(;j<=n-offset;j++){       // 从左到右
+                    res.push_back(matrix[i][j]);
+                }
+            }else{      // 从上到下
+                for(;i<=m-offset;i++){       // 从上到下
+                    res.push_back(matrix[i][j]);
+                }
+            }
+        }
+        return res;
+    }
+};
+
+// 10. T59.螺旋矩阵II:给你一个正整数 n ，生成一个包含 1 到 n2 所有元素，且元素按顺时针顺序螺旋排列的 n x n 正方形矩阵 matrix 。
+/*填充上行从左到右
+ 填充右列从上到下
+ 填充下行从右到左
+ 填充左列从下到上*/
+class Solution_10 {
+public:
+    vector<vector<int>> generateMatrix(int n) {     // 矩阵n行n列
+        int startX=0,startY=0;  // 每一层循环的起始位置
+        vector<vector<int>> res(n,vector<int>(n, 0));
+        int loop=n/2;  // 循环个数
+        int count=1,offset=1;   // offset为每一条边的遍历长度
+        int i=0,j=0;
+        
+        while(loop--){
+            i=startX;j=startY;
+            for(;j<n-offset;j++){       // 模拟上行从左到右
+                res[i][j]=count++;
+            }
+            for(;i<n-offset;i++){       // 模拟右列从上到下
+                res[i][j]=count++;
+            }
+            for(;j>startY;j--){         // 模拟下行从右到左
+                res[i][j]=count++;
+            }
+            for(;i>startX;i--){         // 模拟左列从下到上
+                res[i][j]=count++;
+            }
+            startX++;startY++;
+            offset++;
+        }
+        if(n%2){
+            int mid=n/2;
+            res[mid][mid]=count++;
+        }
+        return res;
+    }
+};
+
+
 int main(int argc, const char * argv[]) {
     // insert code here...
     std::cout << "Hello, World!\n";
