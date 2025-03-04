@@ -210,6 +210,62 @@ public:
 };
 ```
 ### 3. 滑动窗口
+#### 3.1 滑动窗口模版
+```C
+for (int l = 0, r = 0 ; r < n ; r++) {  //外层循环扩展右边界
+	//当前考虑的元素
+	while (l <= r && check()) {//区间[left,right]不符合题意
+        //内层循环收缩左边界
+    }
+    //区间[left,right]符合题意，统计相关信息
+}
+```
+* 长度最小的子数组：滑动窗口为：满足其和>=s的长度最小的连续子数组
+* 水果成篮：
+* 最小覆盖子串：给你一个字符串 s 、一个字符串 t 。返回 s 中涵盖 t 所有字符的最小子串。如果 s 中不存在涵盖 t 所有字符的子串，则返回空字符串 "" 。
+    * 采用哈希表记录：当前窗口内，某个字符出现次数
+    * 时间复杂度：O(|s|+|t|)；空间复杂度：O(C),C为字符集的大小
+    * ```C
+        // 采用哈希表记录：当前窗口内，某个字符出现次数
+        // 时间复杂度：O(|s|+|t|)；空间复杂度：O(C),C为字符集的大小
+        class Solution_3 {
+        public:
+            bool check(){       // s_char_map是否包括所有t_char_map中字符
+                for(const auto &pair:t_char_map){
+                    if(s_char_map[pair.first]<pair.second) return false;
+                }
+                return true;
+            }
+            unordered_map<char,int>t_char_map,s_char_map;
+            string minWindow(string s, string t) {
+                int len=INT_MAX,ansL=-1;
+                // 1. 统计字符串t中每个字符的出现次数
+                for(int i=0;i<t.size();i++){
+                    t_char_map[t[i]]++;
+                }
+                // 2. 滑动窗口
+                for(int l=0,r=0;r<s.size();r++){    // 外层循环扩展右边界
+                    // 2.1 判断当前字符是否在t中出现：若出现，进行统计
+                    if(t_char_map.find(s[r])!=t_char_map.end()){
+                        s_char_map[s[r]]++;
+                    }
+                    while(l<=r && check()){
+                        if(r-l+1<len){
+                            len=r-l+1;
+                            ansL=l;
+                        }
+                        // 2.2 内层循环收缩左边界
+                        if(s_char_map.find(s[l])!=s_char_map.end()){
+                            s_char_map[s[l]]--;
+                        }
+                        l++;
+                    }
+                }
+                return ansL==-1?string():s.substr(ansL,len);
+            }
+        };
+        ```
+* 串联所有单词的子串
 
 * 滑动窗口最大值
     > 给你一个整数数组 nums，有一个大小为 k 的滑动窗口从数组的最左侧移动到数组的最右侧。你只可以看到在滑动窗口内的 k 个数字。滑动窗口每次只向右移动一位。返回 滑动窗口中的最大值 。
@@ -258,6 +314,16 @@ public:
         }
         };
         ```
+
+### 4. 前缀和数组
+* sums[i] 表示：从 nums[0] 到 nums[i−1] 的元素和
+```C
+int n=nums.size();
+vector<int> sums(n+1,0);
+for(int i=1;i<=n;i++){
+    sums[i]=sums[i - 1] + nums[i - 1];
+}
+```
 
 ## 链表
 
