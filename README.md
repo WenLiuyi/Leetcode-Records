@@ -131,7 +131,134 @@ int get_random(int left, int right){
     * 例：荷兰国旗问题(Leetcode.T75)
 
 ## 数组
+### 1. 理论基础
+* 数组：存放在**连续内存空间**伤的相同类型数据的集合；数组下标从0开始。
+* 在删除/增添元素时，可能需要移动其他元素的地址。
+> vector的的底层实现是array；
+> 在C++中，二维数组是连续分布的；Java没有指针，同时也不对程序员暴露其元素的地址，寻址操作完全交给虚拟机，所以不一定是连续的。
 ### 2. 二分查找
+#### 2.1 前提：数组有序
+#### 2.2 区间写法
+##### 2.2.1 target在[left,right]区间
+* **while(left<=right)**：因为left == right是有意义的，所以使用 <=
+* if (nums[middle] > target) **right 要赋值为 middle - 1**：因为当前这个nums[middle]一定不是target，那么接下来要查找的左区间结束下标位置就是 middle - 1
+```C
+// 写法一：[left,right]区间
+class Solution_1_1 {
+public:
+    int search(vector<int>& nums, int target) {
+        int left=0,right=nums.size()-1;
+        while(left<=right){
+            int mid=left+(right-left)/2;
+            if(nums[mid]>target){
+                right=mid-1;
+            }else if(nums[mid]<target){
+                left=mid+1;
+            }else{
+                return mid;
+            }
+        }
+        return -1;
+    }
+};
+```
+#### 2.3 有重复元素时，查找目标区间
+* 分别运用二分查找，查找左边界、右边界
+```C
+/* 三种情况：
+ 1. target 在数组范围的右边或者左边，例如数组{3, 4, 5}，target为2或者数组{3, 4, 5},target为6，此时应该返回[-1, -1];
+ 2. target 在数组范围中，且数组中不存在target，例如数组{3,6,7},target为5，此时应该返回[-1, -1];
+ 3. target 在数组范围中，且数组中存在target，例如数组{3,6,7},target为6，此时应该返回[-1, -1].
+ */
+int getLeftBorder(vector<int>&nums,int target){     // 寻找左边界:不包含target的左边界
+        int left=0,right=nums.size()-1;
+        int leftBorder=-2;
+        while(left<=right){
+            int mid=left+((right-left)>>1);
+            if(nums[mid]>=target){  // 此时nums[mid-1]<=target，设为新的左边界
+                right=mid-1;leftBorder=right;
+            }else{
+                left=mid+1;
+            }
+        }
+        return leftBorder;
+    }
+```
+* 找算数平方根/判断是否为完全平方数
+
+##### 2.2.2 target在[left,right)区间
+* **while(left<right)**：这里使用 < ,因为left == right在区间[left, right)是没有意义的
+* if (nums[middle] > target) **right 更新为 middle**，因为当前nums[middle]不等于target，去左区间继续寻找，所以right更新为middle，即：下一个查询区间不会去比较nums[middle]
+```C
+// 写法二：[left,right)区间
+class Solution_1_2 {
+public:
+    int search(vector<int>& nums, int target) {
+        int left=0,right=nums.size();
+        while(left<right){
+            int mid=left+(right-left)/2;
+            if(nums[mid]>target){
+                right=mid;
+            }else if(nums[mid]<target){
+                left=mid+1;
+            }else{
+                return mid;
+            }
+        }
+        return -1;
+    }
+};
+```
+### 3. 滑动窗口
+
+* 滑动窗口最大值
+    > 给你一个整数数组 nums，有一个大小为 k 的滑动窗口从数组的最左侧移动到数组的最右侧。你只可以看到在滑动窗口内的 k 个数字。滑动窗口每次只向右移动一位。返回 滑动窗口中的最大值 。
+    * 滑动窗口每向右移动一位，则最左侧的元素移除，如何维护最大值？
+        1. 采用大根堆实时维护一系列元素中的最大值（优先队列实现），为了保证堆顶的元素在滑动窗口中：不断地移除堆顶的元素，直到其确实出现在滑动窗口中
+        2. 设置单调队列（严格递减）：
+            * 最大值：队首元素
+            * 移除最左侧元素：与队首元素相等时移除（即为最大值），否则不影响；
+            * 加入最右侧元素：从队尾往前，淘汰队中所有小于当前元素的元素
+        ```C
+        class Solution_6_2 {
+        private:
+        class MyQueue{      // 单调队列：从大到小
+            public:
+            deque<int>que;
+            void pop(int x){        // 比较当前要弹出的数值是否等于队列出口元素的数值，如果相等则弹出
+                // 当且仅当：队列中最大值，是需要从滑动窗口中移除的值时，才弹出
+                if(!que.empty()&&que.front()==x){
+                    que.pop_front();
+                }
+            }
+            void push(int x){   // 如果push的数值大于入口元素的数值，那么就将队列后端的数值弹出，直到push的数值小于等于队列入口元素的数值为止
+                while(!que.empty()&&x>que.back()){
+                    que.pop_back();
+                }
+                que.push_back(x);
+            }
+            int front(){        // 查询队列的最大值：直接返回队首的元素
+                return que.front();
+            }
+        };
+        public:
+        vector<int> maxSlidingWindow(vector<int>& nums, int k) {
+            MyQueue queue;  // queue为单调队列，其中的值从大到小存放
+            for(int i=0;i<k;i++) queue.push(nums[i]);
+        
+            vector<int>ans;
+            int n=nums.size();
+            ans.push_back(queue.front());
+            for(int i=k;i<n;i++){
+                queue.pop(nums[i-k]);
+                queue.push(nums[i]);
+                ans.push_back(queue.front());
+            }
+            return ans;
+        }
+        };
+        ```
+
 ## 链表
 
 ## 哈希表
@@ -270,54 +397,7 @@ public:
 
 ## 字符串
 ## 双指针
-## 滑动窗口
-* 滑动窗口最大值
-    > 给你一个整数数组 nums，有一个大小为 k 的滑动窗口从数组的最左侧移动到数组的最右侧。你只可以看到在滑动窗口内的 k 个数字。滑动窗口每次只向右移动一位。返回 滑动窗口中的最大值 。
-    * 滑动窗口每向右移动一位，则最左侧的元素移除，如何维护最大值？
-        1. 采用大根堆实时维护一系列元素中的最大值（优先队列实现），为了保证堆顶的元素在滑动窗口中：不断地移除堆顶的元素，直到其确实出现在滑动窗口中
-        2. 设置单调队列（严格递减）：
-            * 最大值：队首元素
-            * 移除最左侧元素：与队首元素相等时移除（即为最大值），否则不影响；
-            * 加入最右侧元素：从队尾往前，淘汰队中所有小于当前元素的元素
-        ```C
-        class Solution_6_2 {
-        private:
-        class MyQueue{      // 单调队列：从大到小
-            public:
-            deque<int>que;
-            void pop(int x){        // 比较当前要弹出的数值是否等于队列出口元素的数值，如果相等则弹出
-                // 当且仅当：队列中最大值，是需要从滑动窗口中移除的值时，才弹出
-                if(!que.empty()&&que.front()==x){
-                    que.pop_front();
-                }
-            }
-            void push(int x){   // 如果push的数值大于入口元素的数值，那么就将队列后端的数值弹出，直到push的数值小于等于队列入口元素的数值为止
-                while(!que.empty()&&x>que.back()){
-                    que.pop_back();
-                }
-                que.push_back(x);
-            }
-            int front(){        // 查询队列的最大值：直接返回队首的元素
-                return que.front();
-            }
-        };
-        public:
-        vector<int> maxSlidingWindow(vector<int>& nums, int k) {
-            MyQueue queue;  // queue为单调队列，其中的值从大到小存放
-            for(int i=0;i<k;i++) queue.push(nums[i]);
-        
-            vector<int>ans;
-            int n=nums.size();
-            ans.push_back(queue.front());
-            for(int i=k;i<n;i++){
-                queue.pop(nums[i-k]);
-                queue.push(nums[i]);
-                ans.push_back(queue.front());
-            }
-            return ans;
-        }
-        };
-        ```
+
 ## 栈与队列
 ### 1. 理论基础
 栈和队列是STL（C++标准库）里面的两个数据结构。
@@ -327,7 +407,7 @@ public:
 3. SGI STL 由Silicon Graphics Computer Systems公司参照HP STL实现，被Linux的C++编译器GCC所采用，SGI STL是开源软件，源码可读性甚高。
 
 #### std::stack, std::queue
-* std::stack 是 C++ 标准库中的一个容器适配器，它基于其他容器（默认是 std::deque）实现栈的功能（对外提供统一的接口，底层容器是可插拔的）不提供走访功能，也不提供迭代器(iterator)。 不像是set 或者map 提供迭代器iterator来遍历所有元素。
+* std::stack 是 C++ 标准库中的一个容器适配器，它基于其他容器（默认是 std::deque）实现栈的功能（对外提供统一的接口，底层容器是可插拔的），栈内数据在内存中不一定是连续分布的。不提供走访功能，也不提供迭代器(iterator)。 不像是set 或者map 提供迭代器iterator来遍历所有元素。
 ![alt text](20210104235459376.png)
 
 > 常用的SGI STL，如果没有指定底层实现的话，默认是以deque为缺省情况下栈的底层结构。
@@ -402,6 +482,8 @@ public:
     }
 };
 ```
+* 简化路径：通过'/'划分字符串后，设立目录名的栈
+* 简化计算器：设立sign栈，记录当前括号层级的正负
 
 ## 二叉树
 ### 1. 理论基础
