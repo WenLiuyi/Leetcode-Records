@@ -9,6 +9,7 @@
 #include <vector>
 #include <queue>
 #include <stack>
+#include <unordered_set>
 using namespace std;
 
 struct ListNode {
@@ -255,6 +256,94 @@ public:
         return dummy->next;
     }
 };
+
+// 6. 两两交换链表中的节点:给你一个链表，两两交换其中相邻的节点，并返回交换后链表的头节点。你必须在不修改节点内部的值的情况下完成本题（即，只能进行节点交换）。
+class Solution_6 {
+public:
+    ListNode* swapPairs(ListNode* head) {
+        if(head==nullptr||head->next==nullptr) return head;
+        ListNode *dummy=new ListNode(0);
+        dummy->next=head;
+        
+        ListNode *cur=dummy;    // 当前遍历的的节点：这里作为前驱节点
+        while(cur->next!=nullptr && cur->next->next!=nullptr){
+            ListNode *leftNode=cur->next,*rightNode=cur->next->next;
+            leftNode->next=rightNode->next;
+            rightNode->next=leftNode;
+            cur->next=rightNode;
+            
+            cur=cur->next->next;
+        }
+        ListNode *res=dummy->next;
+        delete dummy;
+        return res;
+    }
+};
+
+// 7. T19.删除链表的倒数第N个节点:给你一个链表，删除链表的倒数第 n 个结点，并且返回链表的头结点。
+// 要一次扫描：设置快、慢指针，快指针领先慢指针n个节点；快指针指向尾节点时，慢指针恰好指向待删除节点的前驱节点
+class Solution_7 {
+public:
+    ListNode* removeNthFromEnd(ListNode* head, int n) {
+        ListNode *dummy=new ListNode(0);
+        dummy->next=head;
+        ListNode *slow=dummy,*fast=dummy;
+        
+        while(n--&&fast->next!=nullptr){
+            fast=fast->next;
+        }
+        while(fast->next!=nullptr){
+            fast=fast->next;slow=slow->next;
+        }
+        slow->next=slow->next->next;
+        
+        return dummy->next;
+    }
+};
+
+// 8. T141.环形链表:给你一个链表的头节点 head ，判断链表中是否有环。
+// 法一：运用哈希表登记
+// 时间复杂度：O(n)；空间复杂度：O(n)，将每个节点插入哈希表一次
+class Solution_8_1 {
+public:
+    bool hasCycle(ListNode *head) {
+        unordered_set<ListNode *>seen;
+        while(head!=nullptr){
+            if(seen.count(head)) return true;
+            seen.insert(head);
+            head=head->next;
+        }
+        return false;
+    }
+};
+
+// 法二：Floyd 判圈算法：
+/*定义两个指针，一快一慢。慢指针每次只移动一步，而快指针每次移动两步。
+ 初始时，慢指针在位置 head，而快指针在位置 head.next。
+ 这样一来，如果在移动的过程中，快指针反过来追上慢指针，就说明该链表为环形链表；否则快指针将到达链表尾部，该链表不为环形链表。*/
+/* 时间复杂度：
+ 1. 当链表中不存在环时，快指针将先于慢指针到达链表尾部，链表中每个节点至多被访问两次；
+ 2. 当链表中存在环时，每一轮移动后，快慢指针的距离将减小一。而初始距离为环的长度，因此至多移动 N 轮。
+ 空间复杂度：O(1)
+ */
+class Solution_8_2 {
+public:
+    bool hasCycle(ListNode *head) {
+        if(head==nullptr||head->next==nullptr) return false;
+        ListNode *slow=head,*fast=head->next;
+        while(slow!=fast){
+            if(fast==nullptr||fast->next==nullptr) return false;
+            slow=slow->next;
+            fast=fast->next->next;
+        }
+        return true;
+    }
+};
+
+// 9. T142.环形链表II
+class Solution_9{
+    
+}
 
 int main(int argc, const char * argv[]) {
     // insert code here...
