@@ -439,47 +439,6 @@ public:
     }
 };
 ```
-##### 1.6.2 环形链表
-* 法一：哈希表登记出现过的节点
-    * 时间复杂度：O(n)；空间复杂度：O(n)，将每个节点插入哈希表一次
-    ```C
-    class Solution_8_1 {
-    public:
-    bool hasCycle(ListNode *head) {
-        unordered_set<ListNode *>seen;
-        while(head!=nullptr){
-            if(seen.count(head)) return true;
-            seen.insert(head);
-            head=head->next;
-        }
-        return false;
-    }
-    };
-    ```
-* 法二：Floyd 判圈算法
-    > 定义两个指针，一快一慢。慢指针每次只移动一步，而快指针每次移动两步。
-    > 初始时，慢指针在位置 head，而快指针在位置 head.next。
-    > 这样一来，如果在移动的过程中，快指针反过来追上慢指针，就说明该链表为环形链表；否则快指针将到达链表尾部，该链表不为环形链表。
-    * 时间复杂度：
-        1. 当链表中不存在环时，快指针将先于慢指针到达链表尾部，链表中每个节点至多被访问两次；
-        2. 当链表中存在环时，每一轮移动后，快慢指针的距离将减小一。而初始距离为环的长度，因此至多移动 N 轮。
-    * 空间复杂度：O(1)
-    ```C
-    class Solution_8_2 {
-    public:
-    bool hasCycle(ListNode *head) {
-        if(head==nullptr||head->next==nullptr) return false;
-        ListNode *slow=head,*fast=head->next;
-        while(slow!=fast){
-            if(fast==nullptr||fast->next==nullptr) return false;
-            slow=slow->next;
-            fast=fast->next->next;
-        }
-        return true;
-    }
-    };
-    ```
-
 ###### 优化
 * 法一缺点：如果 left 和 right 的区域很大，恰好是链表的头节点和尾节点时，找到 left 和 right 需要遍历一次；反转它们之间的链表还需要遍历一次
 * 优化思路：在需要反转的区间里，每遍历到一个节点，让这个新节点来到反转部分的起始位置。
