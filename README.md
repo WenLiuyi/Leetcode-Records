@@ -326,6 +326,123 @@ for(int i=1;i<=n;i++){
 ```
 
 ## 链表
+### 1. 理论基础
+* 链表：通过指针串联的线性结构，每一个节点由两个部分组成：**数据域**、**指针域**
+#### 1.1 链表类型
+##### 1.1.1 单链表
+* 指针域只能指向节点的下一个节点
+##### 1.1.2 双链表
+* 每一个节点有两个指针域，一个指向下一个节点，一个指向上一个节点。
+* 既可以向前查询也可以向后查询
+##### 1.1.3 循环链表
+* 链表首尾相连（可解决约塞夫环问题）
+![alt text](20200806194629603.png)
+
+#### 1.2 链表存储方式
+* 数组在内存中连续分布 & **链表在内存中不是连续分布的，通过指针域的指针链接在内存中各个节点（分配机制取决于操作系统的内存管理）**
+
+#### 1.3 链表定义
+单链表：
+> 如果不定义构造函数，初始化时使用默认构造函数
+```C
+struct ListNode{
+    int val;
+    ListNode *next;
+    ListNode(int x):val(x),next(NULL){} // 构造函数
+}
+```
+
+#### 1.4 链表的操作
+##### 1.4.1 删除节点
+1. 将C节点的next指针指向E节点；
+2. C++中手动释放D节点（Java,python有内存回收机制）
+![alt text](20200806195114541-20230310121459257.png)
+> ```C
+> delete tmp;
+> tmp=nullptr;
+>    //被delete后的指针tmp的值（地址）并非就是NULL，而是随机值。也就是被delete后，
+>    //如果不再加上一句tmp=nullptr,tmp会成为乱指的野指针
+> ```
+
+* 直接使用原来的链表进行删除操作：分删除头节点、非头节点两种情况
+* 设置一个**虚拟头节点**进行删除操作
+    * 例：移除指定值的链表元素
+    ```C
+    class Solution_1_2 {
+    public:
+    ListNode* removeElements(ListNode* head, int val) {
+        ListNode *dummy=new ListNode(0);
+        dummy->next=head;
+        ListNode *cur=dummy;
+        while(cur!=nullptr && cur->next!=nullptr){
+            if(cur->next->val==val){
+                ListNode *tmp=cur->next;
+                cur->next=cur->next->next;
+                delete tmp;
+            }else{
+                cur=cur->next;
+            }
+        }
+        head=dummy->next;
+        delete dummy;
+        return head;
+    }
+    };
+    ```
+
+##### 1.4.2 添加节点
+![alt text](20200806195134331-20230310121503147.png)
+
+#### 1.5 性能分析
+![alt text](20200806195200276.png)
+
+#### 1.6 经典题目
+##### 1.6.1 反转链表II
+> 给你单链表的头指针 head 和两个整数 left 和 right ，其中 left <= right 。请你反转从位置 left 到位置 right 的链表节点，返回 反转后的链表 。
+* 思路：断开反转区域两侧；反转链表；重新接上
+* 时间复杂度：O(N)，最坏情况遍历整个链表；空间复杂度：O(1)
+```C
+class Solution_5 {
+public:
+    void reverseLinkedList(ListNode *head){
+        ListNode *cur=head,*pre=nullptr;
+        while(cur!=nullptr){
+            ListNode *tmp=cur->next;    // 记录原本的下一个节点（否则反转指针走向后，找不到）
+            cur->next=pre;
+            pre=cur;cur=tmp;
+        }
+    }
+    ListNode* reverseBetween(ListNode* head, int left, int right) {
+        ListNode *dummy=new ListNode(0);
+        dummy->next=head;
+        
+        ListNode *pre=dummy;
+        for(int i=0;i<left-1;i++){  // pre来到left-1位置的节点
+            pre=pre->next;
+        }
+        ListNode *rightNode=pre;
+        for(int i=0;i<right-left+1;i++){    // rightNode来到right位置的节点
+            rightNode=rightNode->next;
+        }
+        ListNode *leftNode=pre->next,*succ=rightNode->next;
+        
+        // 反转前切断连接
+        pre->next=nullptr;rightNode->next=nullptr;
+        // 反转[left,right]区间的链表
+        reverseLinkedList(leftNode);
+        
+        // 重新接回原来的链表
+        pre->next=rightNode;
+        leftNode->next=succ;
+        
+        return dummy->next;
+    }
+};
+```
+###### 优化
+* 法一缺点：如果 left 和 right 的区域很大，恰好是链表的头节点和尾节点时，找到 left 和 right 需要遍历一次；反转它们之间的链表还需要遍历一次
+* 优化思路：在需要反转的区间里，每遍历到一个节点，让这个新节点来到反转部分的起始位置。
+![alt text](1615105376-jIyGwv-image.png)
 
 ## 哈希表
 ### 1. 理论基础
