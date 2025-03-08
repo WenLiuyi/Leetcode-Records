@@ -356,6 +356,101 @@ public:
     }
 };
 
+// 11.. T135.分发糖果
+/*n 个孩子站成一排。给你一个整数数组 ratings 表示每个孩子的评分。
+ 你需要按照以下要求，给这些孩子分发糖果：
+ 1. 每个孩子至少分配到 1 个糖果。
+ 2. 相邻两个孩子评分更高的孩子会获得更多的糖果。
+ 3. 请你给每个孩子分发糖果，计算并返回需要准备的 最少糖果数目 。*/
+
+// 法一：分别将当前元素，与左右两个相邻元素比较，求出满足规则时的最小值；每个人最终分得的糖果数量即为这两个数量的最大值。
+// 从左到右贪心一遍；从右到左贪心一遍
+// 时间复杂度：O(n)；空间复杂度：O(n)
+class Solution_11_1 {
+public:
+    int candy(vector<int>& ratings) {
+        int n=ratings.size();
+        vector<int>left(n);
+        for(int i=0;i<n;i++){
+            if(i>0&&ratings[i]>ratings[i-1]){
+                left[i]=left[i-1]+1;    // 比左边的元素，多分一个糖果
+            }else{
+                left[i]=1;
+            }
+        }
+        int right=0,ans=0;
+        for(int i=n-1;i>=0;i--){
+            if(i<n-1 && ratings[i]>ratings[i+1]){
+                right++;    // 比右边的元素，多分一个糖果
+            }else{
+                right=1;
+            }
+            ans+=max(left[i],right);
+        }
+        return ans;
+    }
+};
+
+// 法二：常数空间遍历：要么在递增序列，要么在递减序列
+// 1. 处于递增序列：比上一个元素糖果数+1；
+// 2. 处于递减序列：分配给当前同学一个糖果，并把该同学所在的递减序列中所有的同学都再多分配一个糖果
+class Solution_11_2 {
+public:
+    int candy(vector<int>& ratings) {
+        int n=ratings.size();
+        int inc=1,dec=0,pre=1;  // inc,dec分别为递增、递减序列的长度
+        int ret=1;
+        
+        for(int i=1;i<n;i++){
+            if(ratings[i]>=ratings[i-1]){   // 递增序列中
+                dec=0;
+                pre = ratings[i] == ratings[i- 1] ? 1 : pre+1;  //当前同学和上一个同学分数相等时，直接分配1个就行，这样满足最小
+                ret+=pre;
+                inc=pre;
+            }else{
+                dec++;
+                if(dec==inc) dec++; // 当递减序列长度和递增序列长度相等时，把递增序列的最后一个同学分配到递减序列中
+                ret+=dec;
+                pre=1;
+            }
+        }
+        return ret;
+    }
+};
+
+// 12. T42.接雨水:给定 n 个非负整数表示每个宽度为 1 的柱子的高度图，计算按此排列的柱子，下雨之后能接多少雨水。
+// 法一：动态规划:
+// 数组leftMax, rightMax分别记录：leftMax[i] 表示下标 i 及其左边的位置中，height 的最大高度；rightMax[i] 表示下标 i 及其右边的位置中，height 的最大高度。
+// 初始状态：leftMax[0]=height[0]，rightMax[n−1]=height[n−1]
+// 转移方程：
+// 1. 当 1≤i≤n−1 时，leftMax[i]=max(leftMax[i−1],height[i])；
+// 2. 当 0≤i≤n−2 时，rightMax[i]=max(rightMax[i+1],height[i])
+// 位置i处接的雨水量：min(leftMax[i],rightMax[i])−height[i].
+// 时间复杂度：O(n)；空间复杂度：O(n)
+class Solution12_1 {
+public:
+    int trap(vector<int>& height) {
+        int n=height.size();
+        if(n==0) return 0;
+        
+        vector<int>leftMax(n,0);
+        leftMax[0]=height[0];
+        for(int i=1;i<n;i++){
+            leftMax[i]=max(leftMax[i-1],height[i]);
+        }
+        
+        vector<int>rightMax(n,0);
+        rightMax[n-1]=height[n-1];
+        for(int i=n-2;i>=0;i--){
+            rightMax[i]=max(rightMax[i+1],height[i]);
+        }
+        int ret=0;
+        for(int i=0;i<n;i++){
+            ret+=min(leftMax[i],rightMax[i])-height[i];
+        }
+        return ret;
+    }
+};
 
 int main(int argc, const char * argv[]) {
     // insert code here...
