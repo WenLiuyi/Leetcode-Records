@@ -455,6 +455,42 @@ public:
     }
 };
 
+// 8. T103.二叉树的锯齿形层序遍历:给你二叉树的根节点 root ，返回其节点值的 锯齿形层序遍历 。（即先从左往右，再从右往左进行下一层遍历，以此类推，层与层之间交替进行）。
+// 广度优先遍历:用队列维护当前层的所有元素
+// 使用双端队列：可以满足：先从左往右，再从右往左
+class Solution_8 {
+public:
+    vector<vector<int>> zigzagLevelOrder(TreeNode* root) {
+        vector<vector<int>>res;
+        if(root==nullptr) return res;
+        
+        queue<TreeNode *>queue;
+        queue.push(root);
+        bool isLeft=true;
+        
+        while(!queue.empty()){
+            deque<int>levelList;
+            int size=queue.size();
+            
+            for(int i=0;i<size;i++){
+                auto node=queue.front();
+                queue.pop();
+                // 根据当前层，进行：从左到右/从右到左的插入
+                if(isLeft){
+                    levelList.push_back(node->val);
+                }else{
+                    levelList.push_front(node->val);
+                }
+                if(node->left) queue.push(node->left);
+                if(node->right) queue.push(node->right);
+            }
+            res.push_back(vector<int>{levelList.begin(),levelList.end()});
+            isLeft=!isLeft;
+        }
+        return res;
+    }
+};
+
 
 int main(int argc, const char * argv[]) {
     // insert code here...
