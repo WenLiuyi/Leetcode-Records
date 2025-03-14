@@ -1583,7 +1583,96 @@ public:
 ## 分治
 ## 动态规划
 ## 单调栈
-单调队列：队中元素按严格递减排列
+### 1. 适用场景
+* 一维数组，要寻找任一个元素的右边或者左边，第一个比自己大或者小的元素的位置。
+### 2. 思想
+* 空间换时间：在遍历的过程中，用一个栈来记录右边第一个比当前元素高的元素
+    * 优点：整个数组只需要遍历一次
+### 3. 步骤
+* 单调栈中存放：**元素下标i**；使用对应元素时，用T[i]获取
+    * 下标i存放在单调栈中，表示：右边尚未找到更大的元素
+* 顺序（从栈顶到栈底的顺序）：
+    * 如果求一个元素右边第一个更大元素，单调栈递增；如果求一个元素右边第一个更小元素，单调栈递减。
+* 初始化：若栈为空，元素直接入栈
+* 三个判断条件：（假设当前求右边第一个更大元素）
+    1. 当前遍历的元素T[i]<= 栈顶元素T[st.top()]：下标i入栈
+    2. 当前遍历的元素T[i] > 栈顶元素T[st.top()]：不断弹出栈顶元素，直到栈为空，或者栈顶元素T[st.top()]>当前遍历的元素T[i]；再将下标i入栈
+
+### 4. 示例
+#### 4.1 每日温度
+* 对于第 i 天，下一个更高温度出现在几天后
+* 思想：单调栈满足从栈底到栈顶元素对应的温度递减，因此**每次有元素进栈时，会将温度更低的元素全部移除**，并更新出栈元素对应的等待天数，这样可以确保等待天数一定是最小的。
+```cpp
+class Solution {
+public:
+    vector<int> dailyTemperatures(vector<int>& temperatures) {
+        int n=temperatures.size();
+        vector<int>ret(temperatures.size(),0);
+        if(n==0) return ret;
+        
+        stack<int>temp_stack;
+        temp_stack.push(0);
+        
+        for(int i=1;i<n;i++){
+            if(temperatures[i]<=temperatures[temp_stack.top()]){    // 当前温度 <= 栈顶温度：入栈
+                temp_stack.push(i);
+            }else{
+                while(!temp_stack.empty() && temperatures[i]>temperatures[temp_stack.top()]){
+                    // 当前温度 > 栈顶温度：不断从栈顶弹出元素，直至当前温度 <= 栈顶温度，再将当前下标入栈
+                    ret[temp_stack.top()]=i-temp_stack.top();
+                    temp_stack.pop();
+                }
+                temp_stack.push(i);
+            }
+        }
+        return ret;
+    }
+};
+```
+
+#### 4.2 接雨水
+* 求下标i两侧的最大高度
+`height[i]>height[st.top()]`时：
+ 1. 栈顶元素：凹槽（弹出栈顶元素）
+ 2. 新的栈顶元素：凹槽的左侧位置
+ 3. 当前遍历的元素i：凹槽的右侧位置
+```cpp
+class Solution_4_2 {
+public:
+    int trap(vector<int>& height){
+        if(height.size()<=2) return 0;
+        stack<int>st;
+        st.push(0);
+        
+        int sum=0;
+        for(int i=1;i<height.size();i++){
+            if(height[i]<height[st.top()]){    // 当前高度低于左侧高度，压入栈
+                st.push(i);
+            }else if(height[i]==height[st.top()]){  // 相同高度时，需要用最右侧的柱子计算宽度
+                st.pop();
+                st.push(i);
+            }
+            else{      // 当前高度高于左侧高度，从栈中弹出元素
+                while(!st.empty() && height[i]>height[st.top()]){
+                    int mid=st.top();st.pop();
+                    if(!st.empty()){
+                        int h=min(height[st.top()],height[i])-height[mid];
+                        int w=i-st.top()-1;     // 宽度
+                        sum+=h*w;
+                    }
+                }
+                st.push(i);
+            }
+        }
+        return sum;
+    }
+};
+```
+
+#### 4.3 柱状图中最大的矩形
+* 对于每个柱子（高度为h），找其左右两侧，第一个高度小于h的柱子的下标
+* 从栈头到栈顶：递减
+
 ## 图
 ## 数学
 ### 1. 位运算
