@@ -162,29 +162,6 @@ public:
     }
 };
 ```
-#### 2.3 有重复元素时，查找目标区间
-* 分别运用二分查找，查找左边界、右边界
-```C
-/* 三种情况：
- 1. target 在数组范围的右边或者左边，例如数组{3, 4, 5}，target为2或者数组{3, 4, 5},target为6，此时应该返回[-1, -1];
- 2. target 在数组范围中，且数组中不存在target，例如数组{3,6,7},target为5，此时应该返回[-1, -1];
- 3. target 在数组范围中，且数组中存在target，例如数组{3,6,7},target为6，此时应该返回[-1, -1].
- */
-int getLeftBorder(vector<int>&nums,int target){     // 寻找左边界:不包含target的左边界
-        int left=0,right=nums.size()-1;
-        int leftBorder=-2;
-        while(left<=right){
-            int mid=left+((right-left)>>1);
-            if(nums[mid]>=target){  // 此时nums[mid-1]<=target，设为新的左边界
-                right=mid-1;leftBorder=right;
-            }else{
-                left=mid+1;
-            }
-        }
-        return leftBorder;
-    }
-```
-* 找算数平方根/判断是否为完全平方数
 
 ##### 2.2.2 target在[left,right)区间
 * **while(left<right)**：这里使用 < ,因为left == right在区间[left, right)是没有意义的
@@ -209,6 +186,31 @@ public:
     }
 };
 ```
+
+#### 2.3 有重复元素时，查找目标区间
+* 分别运用二分查找，查找左边界、右边界
+```C
+/* 三种情况：
+ 1. target 在数组范围的右边或者左边，例如数组{3, 4, 5}，target为2或者数组{3, 4, 5},target为6，此时应该返回[-1, -1];
+ 2. target 在数组范围中，且数组中不存在target，例如数组{3,6,7},target为5，此时应该返回[-1, -1];
+ 3. target 在数组范围中，且数组中存在target，例如数组{3,6,7},target为6，此时应该返回[-1, -1].
+ */
+int getLeftBorder(vector<int>&nums,int target){     // 寻找左边界:不包含target的左边界
+        int left=0,right=nums.size()-1;
+        int leftBorder=-2;
+        while(left<=right){
+            int mid=left+((right-left)>>1);
+            if(nums[mid]>=target){  // 此时nums[mid-1]<=target，设为新的左边界
+                right=mid-1;leftBorder=right;
+            }else{
+                left=mid+1;
+            }
+        }
+        return leftBorder;
+    }
+```
+* 找算数平方根/判断是否为完全平方数
+
 ### 3. 滑动窗口
 #### 3.1 滑动窗口模版
 ```C
@@ -794,6 +796,7 @@ public:
 * std::unordered_set底层实现为哈希表，std::set 和std::multiset 的底层实现是红黑树。红黑树是一种平衡二叉搜索树，所以key值是有序的，但key不可以修改，改动key值会导致整棵树的错乱，所以只能删除和增加。
 
 ## 字符串
+
 ## 双指针
 
 ## 栈与队列
@@ -882,6 +885,50 @@ public:
 ```
 * 简化路径：通过'/'划分字符串后，设立目录名的栈
 * 简化计算器：设立sign栈，记录当前括号层级的正负
+
+## 堆
+### 典型示例
+#### 1. 数组中的第K个最大元素
+* 法一：快速选择
+    * 快速排序的性能和「划分」出的子数组的长度密切相关。直观地理解如果每次规模为 n 的问题我们都划分成 1 和 n−1，每次递归的时候又向 n−1 的集合中递归，这种情况是最坏的，时间代价是 O(n^2)。我们可以引入随机化来加速这个过程，它的时间代价的期望是O(n)，证明过程可以参考「《算法导论》9.2：期望为线性的选择算法」。需要注意的是，这个时间复杂度只有在 随机数据 下才成立，而对于精心构造的数据则可能表现不佳。
+
+* 法二：堆排序：建立一个大根堆，取 k−1 次删除操作后堆顶元素
+```cpp
+// 时间复杂度：建堆的时间代价是 O(n)，删除的总代价是 O(klogn)；总时间复杂度O(n*logn)
+class Solution_1_2{
+public:
+    void maxHeapify(vector<int>&a, int i, int heapSize){
+        int l=i*2+1,r=i*2+2,largest=i;
+        if(l<heapSize && a[l]>a[largest]){
+            largest=l;
+        }
+        if(r<heapSize && a[r]>a[largest]){
+            largest=r;
+        }
+        if(largest!=i){
+            swap(a[i],a[largest]);
+            maxHeapify(a, largest, heapSize);
+        }
+    }
+    void buildMaxHeap(vector<int>&a,int heapSize){
+        for(int i=heapSize/2-1;i>=0;i--){
+            maxHeapify(a, i, heapSize);
+        }
+    }
+    
+    int findKthLargest(vector<int>& nums, int k) {
+        int heapSize=nums.size();
+        buildMaxHeap(nums,heapSize);
+        
+        for(int i=nums.size()-1;i>=nums.size()-k+1;i--){
+            swap(nums[0],nums[i]);  // 删掉当前最大的元素，即堆顶元素
+            heapSize--;
+            maxHeapify(nums, 0, heapSize);
+        }
+        return nums[0];
+    }
+};
+```
 
 ## 二叉树
 ### 1. 理论基础
