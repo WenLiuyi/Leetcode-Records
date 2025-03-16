@@ -374,6 +374,177 @@ public:
     }
 };
 
+// 10. T2.两数相加
+/*给你两个 非空 的链表，表示两个非负的整数。它们每位数字都是按照 逆序 的方式存储的，并且每个节点只能存储 一位 数字。
+ 请你将两个数相加，并以相同形式返回一个表示和的链表。
+ 你可以假设除了数字 0 之外，这两个数都不会以 0 开头。*/
+// 思路：两个指针分别遍历两个链表，将当前节点相加，若有进位，到下一个节点时+1
+class Solution_10 {
+public:
+    ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {
+        if(l1==nullptr&&l2==nullptr) return nullptr;
+        else if(l1==nullptr) return l2;
+        else if(l2==nullptr) return l1;
+        ListNode *head=nullptr,*pre=nullptr;
+        int carry=0;  // 记录进位
+        
+        while(l1!=nullptr&&l2!=nullptr){
+            ListNode *newNode=new ListNode((l1->val+l2->val+carry)%10);
+            carry=(l1->val+l2->val+carry)/10;
+            if(head==nullptr){
+                head=newNode;pre=newNode;
+            }
+            else{
+                pre->next=newNode;pre=newNode;
+            }
+            l1=l1->next;l2=l2->next;
+        }
+        while(l1!=nullptr){
+            ListNode *newNode=new ListNode((l1->val+carry)%10);
+            carry=(l1->val+carry)/10;
+            if(head==nullptr){
+                head=newNode;pre=newNode;
+            }
+            else{
+                pre->next=newNode;pre=newNode;
+            }
+            l1=l1->next;
+        }
+        while(l2!=nullptr){
+            ListNode *newNode=new ListNode((l2->val+carry)%10);
+            carry=(l2->val+carry)/10;
+            if(head==nullptr){
+                head=newNode;pre=newNode;
+            }
+            else{
+                pre->next=newNode;pre=newNode;
+            }
+            l2=l2->next;
+        }
+        // 注意！如果遍历完成后，carry=1，新增一个节点
+        if(carry){
+            ListNode *newNode=new ListNode(carry);
+            pre->next=newNode;
+        }
+        return head;
+    }
+};
+
+// 11. T21.合并两个有序链表:将两个升序链表合并为一个新的 升序 链表并返回。新链表是通过拼接给定的两个链表的所有节点组成的。
+// l1 和 l2 均按 非递减顺序 排列
+class Solution_11 {
+public:
+    ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {
+        if(list1==nullptr&&list2==nullptr) return nullptr;
+        else if(list1==nullptr) return list2;
+        else if(list2==nullptr) return list1;
+        ListNode *head=nullptr,*cur1=list1,*cur2=list2,*pre=nullptr;
+        
+        while(cur1!=nullptr && cur2!=nullptr){
+            if(cur1->val<=cur2->val){
+                if(head==nullptr) {
+                    head=cur1;
+                    cur1=cur1->next;
+                    head->next=nullptr;
+                    pre=head;
+                }
+                else{
+                    pre->next=cur1;
+                    cur1=cur1->next;
+                    pre->next->next=nullptr;    // 断开节点之后的连接
+                    pre=pre->next;
+                }
+            }else{
+                if(head==nullptr){
+                    head=cur2;
+                    cur2=cur2->next;
+                    head->next=nullptr;
+                    pre=head;
+                }
+                else{
+                    pre->next=cur2;
+                    cur2=cur2->next;
+                    pre->next->next=nullptr;    // 断开节点之后的连接
+                    pre=pre->next;
+                }
+            }
+        }
+        if(cur1!=nullptr) pre->next=cur1;
+        if(cur2!=nullptr) pre->next=cur2;
+        
+        return head;
+    }
+};
+
+// 12. T138.随机链表的复制
+/*给你一个长度为 n 的链表，每个节点包含一个额外增加的随机指针 random ，该指针可以指向链表中的任何节点或空节点。
+ 构造这个链表的 深拷贝。 深拷贝应该正好由 n 个 全新 节点组成，其中每个新节点的值都设为其对应的原节点的值。新节点的 next 指针和 random 指针也都应指向复制链表中的新节点，并使原链表和复制链表中的这些指针能够表示相同的链表状态。复制链表中的指针都不应指向原链表中的节点 。
+ 例如，如果原链表中有 X 和 Y 两个节点，其中 X.random --> Y 。那么在复制链表中对应的两个节点 x 和 y ，同样有 x.random --> y 。
+ 返回复制链表的头节点。
+
+ 用一个由 n 个节点组成的链表来表示输入/输出中的链表。每个节点用一个 [val, random_index] 表示：
+ val：一个表示 Node.val 的整数。
+ random_index：随机指针指向的节点索引（范围从 0 到 n-1）；如果不指向任何节点，则为  null 。
+ 你的代码 只 接受原链表的头节点 head 作为传入参数。*/
+class Node{
+public:
+    int val;
+    Node *next,*random;
+    Node (int _val){
+        val=_val;
+        next=nullptr;random=nullptr;
+    }
+};
+// 法一：回溯+哈希表
+// 哈希表记录：每一个节点对应新节点的创建情况
+// 时间复杂度：O(n)，对于每个节点，我们至多访问其「后继节点」和「随机指针指向的节点」各一次，均摊每个点至多被访问两次。
+// 空间复杂度：O(n)，哈希表空间开销
+class Solution_12_1 {
+public:
+    unordered_map<Node *,Node *>map;
+    Node* copyRandomList(Node* head) {
+        if(head==nullptr) return nullptr;
+        
+        if(!map.count(head)){
+            Node *newHead=new Node(head->val);  // 创建新节点
+            map[head]=newHead;
+            newHead->next=copyRandomList(head->next);
+            newHead->random=copyRandomList(head->random);
+        }
+        return map[head];
+    }
+};
+// 法二：省去哈希表的开销空间：
+// 对于链表 A→B→C，我们可以将其拆分为 A→A′→B→B′→C→C′
+class Solution_12_2 {
+public:
+    unordered_map<Node *,Node *>map;
+    Node* copyRandomList(Node* head) {
+        if(head==nullptr) return nullptr;
+        // 1. 为每个节点创建新节点，并插在原节点的下一个位置
+        for(Node *cur=head;cur!=nullptr;cur=cur->next->next){
+            Node *newNode=new Node(cur->val);
+            newNode->next=cur->next;
+            cur->next=newNode;
+        }
+        // 2. 设置新节点的random指针
+        for(Node *cur=head;cur!=nullptr;cur=cur->next->next){
+            Node *newNode=cur->next;
+            if(cur->random==nullptr) newNode->random=nullptr;
+            else newNode->random=cur->random->next;
+        }
+        // 3. 将新节点从原链表中摘除，重新设置next指针
+        Node *newHead=head->next;
+        for(Node *cur=head;cur!=nullptr;cur=cur->next){
+            Node *newNode=cur->next;
+            cur->next=cur->next->next;
+            if(newNode->next!=nullptr) newNode->next=newNode->next->next;
+            else newNode->next=nullptr;
+        }
+        return newHead;
+    }
+};
+
 int main(int argc, const char * argv[]) {
     // insert code here...
     std::cout << "Hello, World!\n";

@@ -141,6 +141,90 @@ public:
     }
 };
 
+// 5. T378.有序矩阵中第K小的元素:给你一个 n x n 矩阵 matrix ，其中每行和每列元素均按升序排序，找到矩阵中第 k 小的元素。请注意，它是 排序后 的第 k 小元素，而不是第 k 个 不同 的元素。你必须找到一个内存复杂度优于 O(n2) 的解决方案
+// 法一：直接排序:将这个二维数组转成一维数组，并对该一维数组进行排序
+// 时间复杂度：O(n^2 * logn)，对n^2个数排序
+// 空间复杂度：O(n^2)
+class Solution_5_1 {
+public:
+    int kthSmallest(vector<vector<int>>& matrix, int k) {
+        vector<int>rec;
+        for(auto &row:matrix){
+            for(int it:row){
+                rec.push_back(it);
+            }
+        }
+        sort(rec.begin(),rec.end());
+        return rec[k-1];
+    }
+};
+// 法二：归并排序:n 个数组归并，用小根堆维护
+// 时间复杂度：O(k*logn)，归并k次，每次堆中插入和弹出的操作时间复杂度均为 logn
+// 空间复杂度：O(n)，堆的大小始终为n
+class Solution_5_2 {
+public:
+    int kthSmallest(vector<vector<int>>& matrix, int k) {
+        struct point{
+            int val,x,y;
+            point(int _val,int _x,int _y):val(_val),x(_x),y(_y){}
+            bool operator > (const point &a)const{return this->val>a.val;} // 定义>
+        };
+        priority_queue<point, vector<point>, greater<point>>queue;  // 小根堆：要定义>符号
+        
+        int n=matrix.size();
+        for(int i=0;i<n;i++){
+            queue.emplace(matrix[i][0],i,0);    // 将每行的第一个元素加入队列
+        }
+        for(int i=0;i<k-1;i++){
+            point cur=queue.top();queue.pop();  // 弹出堆顶元素；加入对应行中的下一个元素
+            if(cur.y!=n-1){
+                queue.emplace(matrix[cur.x][cur.y+1],cur.x,cur.y+1);
+            }
+        }
+        return queue.top().val;
+    }
+};
+
+// 法三：二分查找
+// 整个二维数组中 matrix[0][0] 为最小值，matrix[n−1][n−1] 为最大值，现在我们将其分别记作 l 和 r
+/* 1. 初始位置在 matrix[n−1][0]（即左下角）；
+ 2. 设当前位置为 matrix[i][j]。若 matrix[i][j]≤mid，则将当前所在列的不大于 mid 的数的数量（即 i+1）累加到答案中，并向右移动，否则向上移动；
+ 3. 不断移动直到走出格子为止。*/
+class Solution_5_3 {
+public:
+    bool check(vector<vector<int>>& matrix, int mid, int k, int n){
+        int i=n-1,j=0;
+        int cnt=0;      // 统计整个矩阵中，<=mid的元素个数
+        while(i>=0 && j<n){
+            if(matrix[i][j]<=mid){
+                cnt+=i+1;   // 当前列中,<=mid的元素个数
+                j++;
+            }else{
+                i--;
+            }
+        }
+        return cnt>=k;
+    }
+    
+    int kthSmallest(vector<vector<int>>& matrix, int k) {
+        int n=matrix.size();
+        int left=matrix[0][0],right=matrix[n-1][n-1];
+        while(left<right){      // 采用了二分查找的写法二
+            int mid=left+((right-left)>>1);
+            if(check(matrix,mid,k,n)){
+                right=mid;
+            }else{
+                left=mid+1;
+            }
+        }
+        return left;
+    }
+};
+
+/*
+ 总结：第一种没有利用矩阵的性质，所以时间复杂度最差；第二种解法只利用了一部分性质（每一行是一个有序数列，而忽视了列之间的关系）；第三种解法则利用了全部性质，所以时间复杂度最佳。
+ */
+
 int main(int argc, const char * argv[]) {
     // insert code here...
     std::cout << "Hello, World!\n";

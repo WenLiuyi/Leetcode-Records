@@ -452,6 +452,38 @@ public:
     }
 };
 
+// 13. T719.找出第K小的数对距离
+/* 数对 (a,b) 由整数 a 和 b 组成，其数对距离定义为 a 和 b 的绝对差值。
+ 给你一个整数数组 nums 和一个整数 k ，数对由 nums[i] 和 nums[j] 组成且满足 0 <= i < j < nums.length 。返回 所有数对距离中 第 k 小的数对距离。 */
+// 思路：排序+二分查找
+// 第 k 小的数对距离必然在区间 [0,max(nums)−min(nums)] 内，在此区间进行二分；
+// 对于当前搜索的距离 mid，计算所有距离小于等于 mid 的数对数目 cnt，如果 cnt≥k，那么 right=mid−1，否则 left=mid+1。当 left>right 时，终止搜索，那么第 k 小的数对距离为 left。
+//给定距离 mid，计算所有距离小于等于 mid 的数对数目 cnt ,使用二分查找：枚举所有数对的右端点 j，二分查找大于等于 nums[j]−mid 的最小值的下标 i，那么右端点为 j 且距离小于等于 mid 的数对数目为 j−i，计算这些数目之和。
+
+// 外层二分查找：O(logD);内层二分查找:O(n*logn). 总时间复杂度：O(nlogn*logD)
+class Solution_13 {
+public:
+    int smallestDistancePair(vector<int>& nums, int k) {
+        sort(nums.begin(),nums.end());
+        int n=nums.size(),left=0,right=nums[n-1]-nums[0];
+        
+        while(left<=right){     // 1. 先对距离区间[left,right]进行二分
+            int mid=(left+right)/2,cnt=0;
+            // 计算所有距离小于等于mid的数组
+            for(int j=0;j<n;j++){   // 2. 再对排序后的数组二分，查找和nums[j]的距离不超过mid的下标范围
+                int i=lower_bound(nums.begin(), nums.begin()+j, nums[j]-mid)-nums.begin();
+                cnt+=j-i;
+            }
+            if(cnt>=k){
+                right=mid-1;
+            }else{
+                left=mid+1;     // 对于left，有：cnt<k才会更新
+            }
+        }
+        return left;
+    }
+};
+
 int main(int argc, const char * argv[]) {
     // insert code here...
     std::cout << "Hello, World!\n";

@@ -4,8 +4,8 @@
 * 容器适配器：对外接口只是从队头取元素，从队尾添加元素，再无其他取元素的方式。
 * 其中的元素按照某种优先级顺序排列，每次访问或删除的元素都是优先级最高的元素。
 #### 1.1 基本特性
-1. 默认行为：std::priority_queue 是一个**最大堆**，即优先级最高的元素是最大的元素。
-2. 底层容器：std::priority_queue 默认使用 **std::vector**作为底层容器，但也可以指定其他容器（如 std::deque）。
+1. 默认行为：`std::priority_queue` 是一个**最大堆**，即优先级最高的元素是最大的元素。
+2. 底层容器：`std::priority_queue` 默认使用 **std::vector**作为底层容器，但也可以指定其他容器（如 `std::deque`）。
 3. 核心操作：
     * `push()`：插入元素--O(logn)
     * `pop()`：删除优先级最高的元素--O(logn)
@@ -80,18 +80,19 @@ priority_queue<int, vector<int>, decltype(cmp)> customHeap(cmp);
 
 ## 排序
 ### 1. 快速排序(QuickSort)
+#### 1.1 概述
 > 参考：https://zh.wikipedia.org/wiki/快速排序
 * 基于**分治法**：通过选择一个基准元素(pivot)，将数组分为两部分：一部分小于基准元素，另一部分大于基准元素，然后递归地对这两部分进行排序。
 1. 挑选基准值：从数列中挑出一个元素，称为“基准”（pivot），
 2. 分割：重新排序数列，所有比基准值小的元素摆放在基准前面，所有比基准值大的元素摆在基准后面（与基准值相等的数可以到任何一边）。在这个分割结束之后，对基准值的排序就已经完成，
 3. 递归排序子序列：递归地将小于基准值元素的子序列、大于基准值元素的子序列排序。
 > 递归到最底部的判断条件是数列的大小是零或一，此时该数列显然已经有序。
-### 2. 复杂度
+#### 1.2 复杂度
 * 平均时间复杂度：O(n*logn)
 * 最坏时间复杂度：O(n^2)（当每次选择的基准元素都是最大或最小值时）
 * 空间复杂度：O(logn)（递归调用栈的深度）
-### 3. 实现
-#### 3.1 递归实现
+#### 1.3 实现
+##### 1.3.1 递归实现
 ```C
 // 1. 快速排序（递归）
 template<typename T>
@@ -114,8 +115,8 @@ void quickSort(T A[],int left, int right) {
     if (i < right) quickSort(A,i, right);
 }
 ```
-### 4. 优化
-#### 4.1 随机选择基准元素
+#### 1.4 优化
+##### 1.4.1 随机选择基准元素
 朴素快排的缺陷：
 1. **基准元素选择不当**：比如快排一个有序序列1234567，首先划分1和右区间234567接着划分2和右区间34567，以此类推，直到划分到n层，在做数组划分的时候会遍历整个数组一遍，此时时间复杂度就是O(N)级别；
 ```C
@@ -126,9 +127,120 @@ int get_random(int left, int right){
     return a[rand() % (right - left + 1) + left];   // 在 [left，right]区间内，随机选择一个数
 }
 ```
-#### 4.2 
+##### 1.4.2 
 2. **有大量重复元素时，递归层数也会增加**：比如数组里面全都是6，不管选择哪一个位置的6为基准元素，选择完后都会划分大于等于6的区间出来，之后再选择再划分，一直划分到数组元素个数的层数就和上面的情况一样了。
     * 例：荷兰国旗问题(Leetcode.T75)
+
+### 2. 堆排序
+#### 2.1 概述
+* 堆是一个近似完全二叉树的结构，并同时满足堆的性质：即子节点的键值或索引总是小于（或者大于）它的父节点。
+* 满足最大堆性质的二叉树：对于除了根之外的每个节点i, `A[parent(i)] ≥ A[i]`
+
+#### 2.2 堆节点的访问
+* 通过一维数组实现，在数组起始位置为0的情形中：
+    * 父节点i的左子节点：`2*i+1`
+    * 父节点i的右子节点：`2*i+2`
+    * 子节点i的父节点：`floor((i-1)/2)`
+
+#### 2.3 堆的操作
+##### 2.3.1 最大堆调整（Max Heapify）：a[i]左右子树都是最大堆,调整以a[i]为根结点的二叉树为最大堆
+* 时间复杂度:T(n)<=T(2n/3)+theta(1),T(n)=O(lgn).
+###### 递归写法
+```cpp
+void maxHeapify(vector<int>&a, int i, int heapSize){
+    int l=i*2+1,r=i*2+2,largest=i;
+    if(l<heapSize && a[l]>a[largest]){      // 1. 获取左右子节点中，更大的一个
+        largest=l;
+    }
+    if(r<heapSize && a[r]>a[largest]){
+        largest=r;
+    }
+    if(largest!=i){                         // 2. 交换父节点和子节点，再递归处理
+        swap(a[i],a[largest]);
+        maxHeapify(a, largest, heapSize);
+    }
+}
+```
+###### 迭代写法
+```cpp
+void _maxHeapify(vector<int>&a, int left, int right){
+    int parent=left,child=parent*2+1;
+    while(child<=right){
+        if(child+1<=right && a[child]<a[child+1]){
+            child++;    // 1. 获取左右子节点中，更大的一个
+        }
+        if(a[parent]>a[child]){
+            return;
+        }
+        else{      // 2. 交换父节点和子节点
+            swap(a[parent],a[child]);
+            parent=child;       // 递推
+            child=parent*2+1;
+        }
+    }
+}
+```
+##### 2.3.2 建堆:自底向上,用max_heapify将数组转为最大堆:a[len/2+1,...,len]为叶节点,每个叶节点看作一个元素的堆
+* 时间复杂度:非紧确界:O(n*lgn);紧确界:O(n).
+```cpp
+void buildMaxHeap(vector<int>&a,int len){
+    int heapSize=len;
+    for(int i=heapSize/2-1;i>=0;i--){       // 从最后一个父节点开始调整
+        maxHeapify(a, i, heapSize);
+        // _maxHeapify(a,i,heapSize-1);
+    }
+}
+```
+##### 2.3.3 堆排序(升序)
+1. 建立初始最大堆a[0,...,heapSize-1]
+2. 把堆首（最大值）和堆尾互换
+3. 把堆的尺寸缩小1，并调用maxHeapify,目的是把新的堆顶元素下沉至相应位置
+4. 重复步骤2，直到堆的尺寸为1
+```cpp
+void heapSort(vector<int> &a,int len){
+    buildMaxHeap(a,len);   //建立初始最大堆
+    int heapSize=len;
+    for(int i=heapSize-1;i>0;i--)
+    {
+        swap(a[0],a[i]);
+        heapSize-=1;
+        maxHeapify(a,0,heapSize);
+    }
+}
+```
+##### 2.3.4 去除堆顶最大元素: 将最后一个元素移至堆顶，再下沉
+* 时间复杂度:O(logn)
+```cpp
+int heapExtractMax(vector<int>&a,int &heapsize){
+    if(heapsize<1) return -1;       //无效
+    int max=a[0];
+    a[0]=a[heapsize-1];
+    heapsize--;
+    maxHeapify(a,0,heapsize);
+    return max;
+}
+```
+##### 2.3.5 最大堆元素值增加后，调整最大堆
+```cpp
+void heapIncreaseKey(vector<int>&a, int i, int key){
+    if(a[i]>key) return;
+    a[i]=key;
+    while(i>0 && a[(i-1)/2]<a[i]){  //上浮:与父节点交换
+        swap(a[i],a[(i-1)/2]);
+        i=(i-1)/2;
+    }
+}
+```
+##### 2.3.6 最大堆插入元素
+* 时间复杂度:O(logn)
+```cpp
+#define INFINITY -10000
+void maxHeapInsert(vector<int>&a, int key, int &heapSize){
+    heapSize++;
+    a[heapSize]=INFINITY;
+    heapIncreaseKey(a,heapSize,key);
+}
+```
 
 ## 数组
 ### 1. 理论基础
@@ -209,7 +321,88 @@ int getLeftBorder(vector<int>&nums,int target){     // 寻找左边界:不包含
         return leftBorder;
     }
 ```
+
+#### 2.4 找出第K小的数对距离
+* 数对 (a,b) 由整数 a 和 b 组成，其数对距离定义为 a 和 b 的绝对差值。给你一个整数数组 nums 和一个整数 k ，数对由 nums[i] 和 nums[j] 组成且满足 0 <= i < j < nums.length 。返回 所有数对距离中 第 k 小的数对距离。
+    * 思路：两层二分
+        1. 第 k 小的数对距离必然在区间 [0,max(nums)−min(nums)] 内，在此区间进行二分；
+        2. 给定距离 mid，计算所有距离小于等于 mid 的数对数目 cnt ,使用二分查找：枚举所有数对的右端点 j，二分查找大于等于 nums[j]−mid 的最小值的下标 i，那么右端点为 j 且距离小于等于 mid 的数对数目为 j−i，计算这些数目之和。
+        * 外层二分查找：O(logD);内层二分查找:O(n*logn). 总时间复杂度：O(nlogn*logD)
+        * 空间复杂度：O(logn)，排序的平均空间复杂度
+```cpp
+class Solution_13 {
+public:
+    int smallestDistancePair(vector<int>& nums, int k) {
+        sort(nums.begin(),nums.end());
+        int n=nums.size(),left=0,right=nums[n-1]-nums[0];
+        
+        while(left<=right){     // 1. 先对距离区间[left,right]进行二分
+            int mid=(left+right)/2,cnt=0;
+            // 计算所有距离小于等于mid的数组
+            for(int j=0;j<n;j++){   // 2. 再对排序后的数组二分，查找和nums[j]的距离不超过mid的下标范围
+                int i=lower_bound(nums.begin(), nums.begin()+j, nums[j]-mid)-nums.begin();
+                cnt+=j-i;
+            }
+            if(cnt>=k){
+                right=mid-1;
+            }else{
+                left=mid+1;
+            }
+        }
+        return left;        // 对于left，有：cnt<k才会更新
+    }
+};
+```
 * 找算数平方根/判断是否为完全平方数
+* 有序矩阵中第 K 小的元素：
+    1. 法一：直接排序:将这个二维数组转成一维数组，并对该一维数组进行排序
+    2. 归并排序:n 个数组归并，用小根堆维护
+        ```cpp
+        // 小根堆定义
+        struct point{
+            int val,x,y;
+            point(int _val,int _x,int _y):val(_val),x(_x),y(_y){}
+            bool operator > (const point &a)const{return this->val>a.val;} // 定义>
+        };
+        priority_queue<point, vector<point>, greater<point>>queue;  // 小根堆：要定义>符号
+        ```
+    3. 二分查找：
+        * 整个二维数组中 matrix[0][0] 为最小值，matrix[n−1][n−1] 为最大值，现在我们将其分别记作 l 和 r.
+        1. 初始位置在 matrix[n−1][0]（即左下角）；
+        2. 设当前位置为 matrix[i][j]。若 matrix[i][j]≤mid，则将当前所在列的不大于 mid 的数的数量（即 i+1）累加到答案中，并向右移动，否则向上移动；
+        3. 不断移动直到走出格子为止。
+        ```cpp
+        class Solution_5_3 {
+        public:
+        bool check(vector<vector<int>>& matrix, int mid, int k, int n){
+        int i=n-1,j=0;
+        int cnt=0;      // 统计整个矩阵中，<=mid的元素个数
+        while(i>=0 && j<n){
+            if(matrix[i][j]<=mid){
+                cnt+=i+1;   // 当前列中,<=mid的元素个数
+                j++;
+            }else{
+                i--;
+            }
+        }
+            return cnt>=k;
+        }
+        int kthSmallest(vector<vector<int>>& matrix, int k) {
+            int n=matrix.size();
+            int left=matrix[0][0],right=matrix[n-1][n-1];
+            while(left<right){      // 采用了二分查找的写法二
+            int mid=left+((right-left)>>1);
+            if(check(matrix,mid,k,n)){
+                right=mid;
+            }else{
+                left=mid+1;
+            }
+        }
+        return left;
+        }
+        };
+        ```
+    * 总结：第一种没有利用矩阵的性质，所以时间复杂度最差；第二种解法只利用了一部分性质（每一行是一个有序数列，而忽视了列之间的关系）；第三种解法则利用了全部性质，所以时间复杂度最佳。
 
 ### 3. 滑动窗口
 #### 3.1 滑动窗口模版
@@ -897,7 +1090,7 @@ public:
 // 时间复杂度：建堆的时间代价是 O(n)，删除的总代价是 O(klogn)；总时间复杂度O(n*logn)
 class Solution_1_2{
 public:
-    void maxHeapify(vector<int>&a, int i, int heapSize){
+    void maxHeapify(vector<int>&a, int i, int heapSize){    
         int l=i*2+1,r=i*2+2,largest=i;
         if(l<heapSize && a[l]>a[largest]){
             largest=l;
@@ -926,6 +1119,37 @@ public:
             maxHeapify(nums, 0, heapSize);
         }
         return nums[0];
+    }
+};
+```
+
+#### 2. 查找和最小的K对数字
+* 给定两个以 非递减顺序排列 的整数数组 nums1 和 nums2 , 以及一个整数 k 。定义一对值 (u,v)，其中第一个元素来自 nums1，第二个元素来自 nums2 。请找到和最小的 k 个数对 (u1,v1),  (u2,v2)  ...  (uk,vk) 。
+    * 优先队列：优先队列:利用堆的特性可以求出待选范围中最小数对的索引为 (a_i,b_i)，同时将新的待选的数对 (a_i+1,b_i),(a_i,b_i+1) 加入到堆中，直到我们选出 k 个数对即可.
+        > 解决标记去重，反复加入的问题：将 nums1的前 k 个索引数对 (0,0),(1,0),…,(k−1,0) 加入到队列中，每次从队列中取出元素 (x,y) 时，我们只需要将 nums2的索引增加即可
+        * 时间复杂度：O(k*logk)，优先队列中最多只保存 k 个元素，每次压入新的元素队列进行调整的时间复杂度为 logk；
+        * 空间复杂度：O(k)
+```cpp
+class Solution_3 {
+public:
+    vector<vector<int>> kSmallestPairs(vector<int>& nums1, vector<int>& nums2, int k) {
+        int m=nums1.size(),n=nums2.size();
+        vector<vector<int>>res;
+        
+        auto cmp=[&nums1,&nums2](const pair<int,int>&a, const pair<int,int>&b){ // left>right建立小顶堆
+            return nums1[a.first]+nums2[a.second]>nums1[b.first]+nums2[b.second];
+        };
+        priority_queue<pair<int,int>,vector<pair<int,int>>,decltype(cmp)>queue;
+        for(int i=0;i<min(k,m);i++){    // 1. 将 nums1的前 k 个索引数对 (0,0),(1,0),…,(k−1,0) 加入到队列中
+            queue.emplace(i,0);
+        }
+        for(int i=0;i<k;i++){           // 2. 弹出堆顶元素（和最小的索引数对），将对应元素对加入答案
+            if(queue.empty()) break;
+            auto [x,y]=queue.top();
+            queue.pop();
+            res.emplace_back(initializer_list<int>{nums1[x], nums2[y]});
+        }
+        return res;
     }
 };
 ```
