@@ -1850,6 +1850,151 @@ public:
 
 
 ## 回溯
+![alt text](20210219192050666.png)
+### 1. 理解
+回溯法解决的问题：抽象为**树形结构**
+*  在集合中递归查找子集，**集合的大小**就构成了**树的宽度**，**递归的深度**就构成了**树的深度**。
+![alt text](20210130173631174.png)
+* 模版：for循环是横向遍历，backtracking（递归）是纵向遍历
+    ```cpp
+    void backtracking(参数) {
+    if (终止条件) {
+        存放结果;
+        return;
+    }
+
+    for (选择：本层集合中元素（树中节点孩子的数量就是集合的大小）) {
+        处理节点;
+        backtracking(路径，选择列表); // 递归
+        回溯，撤销处理结果
+    }
+    }
+    ```
+### 2. 适用场景
+#### 2.1 组合：N个数里面按一定规则，找出k个数的集合（无序）
+* 需要startIndex的情况：
+    * 求一个集合的组合，就需要startIndex；
+    * 求多个集合之间的组合，各个集合之间相互不影响，那么就不用startIndex
+##### 2.1.1 范围 [1, n] 中所有可能的 k 个数的组合--求同一个集合中的组合
+* 使用回溯，n相当于树的宽度，k相当于树的深度（递归解决多层嵌套循环问题）
+    1. 全局变量：res存储所有结果，path存储单一结果；参数：startIndex来记录下一层递归，搜索的起始位置（避免重复）
+    2. 终止条件：path数组的大小达到k
+    * 时间复杂度: `O(n * 2^n)`
+    * 空间复杂度: `O(n)`
+    * 剪枝优化：如果for循环选择的起始位置之后的元素个数 已经不足 我们需要的元素个数了，那么就没有必要搜索了。
+        * 还需要的元素个数为: `k - path.size()`;在集合n中至多要从该起始位置 : `n - (k - path.size()) + 1`，开始遍历
+    ```cpp
+    class Solution {
+    private:
+    vector<vector<int>> res;
+    vector<int> path;
+    
+    void backTrack(int n,int k,int startIndex){
+        if(path.size()==k){         // 终止条件
+            res.push_back(path);
+            return;
+        }
+        for(int i=startIndex;i<=n-(k-path.size())+1;i++){   // 剪枝优化
+            path.push_back(i);      // 加入当前节点
+            backTrack(n, k, i+1);   // 递归
+            path.pop_back();        // 回溯，撤销当前节点
+        }
+    }
+    public:
+    vector<vector<int>> combine(int n, int k) {
+        res.clear();path.clear();
+        backTrack(n, k, 1);
+        return res;
+    }
+    };
+    ```
+##### 2.1.2 范围 [1, n] 中所有可能的 k 个数的组合--求不同集合之间的组合
+* 给定一个仅包含数字 2-9 的字符串，返回所有它能表示的字母组合。答案可以按 任意顺序 返回。给出数字到字母的映射如下（与电话按键相同）。注意 1 不对应任何字母。
+    * 时间复杂度: O(3^m * 4^n)，其中 m 是对应三个字母的数字个数，n 是对应四个字母的数字个数
+    * 空间复杂度: O(3^m * 4^n)
+```cpp
+class Solution {
+private:
+    const string letterMap[10]={
+        "",     // 0
+        "",     // 1
+        "abc",  // 2
+        "def",  // 3
+        "ghi",  // 4
+        "jkl",  // 5
+        "mno",  // 6
+        "pqrs", // 7
+        "tuv",  // 8
+        "wxyz", // 9
+    };
+    vector<string> res;
+    string s;
+    
+    void backTrack(const string &digits, int index){    // 不改变digits，因此传入常量引用
+        if(index==digits.size()){   // 终止条件：遍历完字符串
+            res.push_back(s);
+            return;
+        }
+        int digit=digits[index]-'0';   // 当前数字
+        string letters=letterMap[digit];
+        for(int i=0;i<letters.size();i++){
+            s.push_back(letters[i]);    // 处理
+            backTrack(digits, index+1); // 递归
+            s.pop_back();       // 回溯
+        }
+    }
+public:
+    vector<string> letterCombinations(string digits) {
+        res.clear();s.clear();
+        if(digits.size()==0) return res;
+        backTrack(digits, 0);
+        return res;
+    }
+};
+```
+##### 2.1.3 组合总和--可重复选取
+* 回溯中的逻辑：
+    ```cpp
+    backTrack(candidates, target, sum, i);  // 关键点:startIndex不用i+1了，表示可以重复读取当前的数
+    ```
+
+##### 2.1.4 组合总和II
+* 给定一个候选人编号的集合 candidates 和一个目标数 target ，找出 candidates 中所有可以使数字和为 target 的组合。
+ candidates 中的每个数字在每个组合中只能使用 一次 。注意：解集不能包含重复的组合。
+* 去重逻辑：
+    1. 树层去重：集合candidates中包含相同元素，要去除同一树层上使用过的元素：如果`candidates[i] == candidates[i - 1]` 并且 `used[i - 1] == false`，就说明：前一个树枝，使用了`candidates[i - 1]`，也就是说同一树层使用过`candidates[i - 1]`.
+    * 在`candidates[i] == candidates[i - 1]`相同的情况下：
+        * `used[i - 1] == true`，说明同一树枝`candidates[i - 1]`使用过；
+        * `used[i - 1] == false`，说明同一树层`candidates[i - 1]`使用过
+    2. 树枝无需去重：同一树枝上的都是一个组合里的元素，不用去重
+![alt text](20221021163812.png)
+```cpp
+for(int i=startIndex;i<candidates.size() && sum+candidates[i]<=target;i++){
+    if(i>0 && candidates[i]==candidates[i-1] && used[i-1]==false){
+        continue;
+    }
+    sum+=candidates[i];
+    used[i]=true;
+    path.push_back(candidates[i]);
+    backTrack(candidates, target, sum, i+1, used);
+    used[i]=false;
+    path.pop_back();
+    sum-=candidates[i];
+}
+```
+* 需要排序：
+```cpp
+sort(candidates.begin(),candidates.end());  // 排序：让相同的元素挨在一起
+```
+
+#### 2.2 切割：一个字符串按一定规则，有几种切割方式
+
+#### 2.3 子集：一个N个数的集合里，有多少符合条件的子集
+
+#### 2.4 排列：N个数按一定规则全排列，有几种排列方式（有序）
+
+#### 2.5 棋盘：N皇后，解数独等等
+
 ## 贪心
 ## 分治
 ## 动态规划
