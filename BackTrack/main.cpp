@@ -223,6 +223,223 @@ public:
     }
 };
 
+// 6. T31.分割回文串:给你一个字符串 s，请你将 s 分割成一些 子串，使每个子串都是 回文串 。返回 s 所有可能的分割方案。
+// 子字符串 是字符串中连续的 非空 字符序列。
+// 1 <= s.length <= 16
+
+/* 切割问题类似组合问题:
+ 对于字符串abcdef：
+ 组合问题：选取一个a之后，在bcdef中再去选取第二个，选取b之后在cdef中再选取第三个.....。
+ 切割问题：切割一个a之后，在bcdef中再去切割第二段，切割b之后在cdef中再切割第三段.....。
+ */
+/*时间复杂度: O(n * 2^n)
+ 空间复杂度: O(n^2) */
+class Solution_6 {
+private:
+    vector<vector<string>>res;
+    vector<string> path;
+    
+    void backTrack(const string &s, int startIndex){
+        if(startIndex>=s.size()){
+            res.push_back(path);
+            return;
+        }
+        for(int i=startIndex;i<s.size();i++){
+            if(isPalindrome(s, startIndex, i)){     // s[startIndex, i]是回文子串
+                string str=s.substr(startIndex, i-startIndex+1);    // i-startIndex+1为子串长度
+                path.push_back(str);
+            }else{
+                continue;
+            }
+            backTrack(s, i+1);
+            path.pop_back();    // 回溯
+        }
+    }
+    
+    bool isPalindrome(const string &s, int start, int end){
+        int i=start, j=end;
+        while(i<=j){
+            if(s[i]!=s[j]) return false;
+            i++;j--;
+        }
+        return true;
+    }
+public:
+    vector<vector<string>> partition(string s) {
+        res.clear();path.clear();
+        backTrack(s, 0);
+        return res;
+    }
+};
+
+// 7. T132.分割回文串II:给你一个字符串 s，请你将 s 分割成一些子串，使每个子串都是回文串。
+// 返回符合要求的 最少分割次数 。
+
+/* 设 f[i] 表示字符串的前缀 s[0..i] 的最少分割次数。
+ 枚举分割出的最右边那段子串的长度, 即s[0..i] 分割出的最后一个回文串.
+ 状态转移方程：f[i]=(0≤j<i)min{f[j]}+1,其中 s[j+1..i] 是一个回文串 */
+// 时间复杂度：O(n^2)
+// 空间复杂度：O(n^2)
+class Solution_7 {
+private:
+    vector<vector<bool>>isPalindrome;
+    void computePalindrome(const string &s){
+        isPalindrome.resize(s.size(), vector<bool>(s.size(),false));
+        for(int i=s.size()-1;i>=0;i--){
+            for(int j=i;j<s.size();j++){
+                if(i==j) isPalindrome[i][j]=true;
+                else if(j-i==1) isPalindrome[i][j]=(s[i]==s[j]);
+                else{
+                    isPalindrome[i][j]=(s[i]==s[j] && isPalindrome[i+1][j-1]);
+                }
+            }
+        }
+    }
+public:
+    int minCut(string s) {
+        computePalindrome(s);
+        int n=s.size();
+        vector<int>f(n,INT_MAX);
+        
+        for(int i=0;i<n;i++){
+            if(isPalindrome[0][i]){     // s[0...i]本身是回文串
+                f[i]=0;
+            }else{
+                for(int j=0;j<i;j++){
+                    if(isPalindrome[j+1][i]){
+                        f[i]=min(f[i],f[j]+1);
+                    }
+                }
+            }
+        }
+        return f[n-1];
+    }
+};
+
+// 8. T93.复原IP地址
+/* 有效 IP 地址 正好由四个整数（每个整数位于 0 到 255 之间组成，且不能含有前导 0），整数之间用 '.' 分隔。
+ 
+ 例如："0.1.2.201" 和 "192.168.1.1" 是 有效 IP 地址，但是 "0.011.255.245"、"192.168.1.312" 和 "192.168@1.1" 是 无效 IP 地址。
+ 给定一个只包含数字的字符串 s ，用以表示一个 IP 地址，返回所有可能的有效 IP 地址，这些地址可以通过在 s 中插入 '.' 来形成。你 不能 重新排序或删除 s 中的任何数字。你可以按 任何 顺序返回答案。*/
+/* 时间复杂度: O(3^4)，IP地址最多包含4个数字，每个数字最多有3种可能的分割方式，则搜索树的最大深度为4，每个节点最多有3个子节点。
+ 空间复杂度: O(n) */
+class Solution_8 {
+private:
+    vector<string>res;
+    bool isValid(const string &s, int start, int end){
+        if(start>end) return false;
+        else if(s[start]=='0' && start!=end){
+            return false;
+        }
+        int num=0;
+        for(int i=start;i<=end;i++){
+            if(s[i]<'0' || s[i]>'9'){
+                return false;
+            }
+            num=num*10+s[i]-'0';
+            if(num>255) return false;
+        }
+        return true;
+    }
+    void backTrack(string &s, int startIndex, int pointerNum){
+        if(pointerNum==3){      // 终止条件：有3个逗号
+            if(isValid(s, startIndex, s.size()-1)){
+                res.push_back(s);
+            }
+            return;
+        }
+        for(int i=startIndex;i<s.size();i++){
+            if(isValid(s, startIndex, i)){      // [startIndex, i]的子串是否合法
+                s.insert(s.begin()+i+1, '.');
+                pointerNum++;
+                backTrack(s,i+2,pointerNum);
+                pointerNum--;
+                s.erase(s.begin()+i+1);
+            }else{
+                break;
+            }
+        }
+    }
+public:
+    vector<string> restoreIpAddresses(string s) {
+        res.clear();
+        if(s.size()<4 || s.size()>12) return res;
+        backTrack(s, 0, 0);
+        return res;
+    }
+};
+
+// 9. T78.子集
+/* 给你一个整数数组 nums ，数组中的元素 互不相同 。返回该数组所有可能的子集（幂集）。
+ 解集 不能 包含重复的子集。你可以按 任意顺序 返回解集。*/
+// 数组的 子集 是从数组中选择一些元素（可能为空）
+
+// 时间复杂度：O(n*2^n)
+// 空间复杂度：O(n)
+class Solution_9 {
+private:
+    vector<vector<int>> res;
+    vector<int> path;
+    
+    void backTrack(vector<int>&nums, int startIndex){
+        res.push_back(path);        // 收集当前子集(不加入当前startIndex)
+        if(startIndex>=nums.size()){
+            return;
+        }
+        for(int i=startIndex;i<nums.size();i++){
+            path.push_back(nums[i]);    // 讲当前元素加入集合
+            backTrack(nums, i+1);
+            path.pop_back();
+        }
+    }
+public:
+    vector<vector<int>> subsets(vector<int>& nums) {
+        res.clear();path.clear();
+        backTrack(nums, 0);
+        return res;
+    }
+};
+
+// 10. T90.子集II
+/* 给你一个整数数组 nums ，其中可能包含重复元素，请你返回该数组所有可能的 子集（幂集）。
+ 
+ 解集 不能 包含重复的子集。返回的解集中，子集可以按 任意顺序 排列。*/
+/* 类似于组合II:
+ 去重逻辑：
+ 1. 树层去重：集合nums中包含相同元素，要去除同一树层上使用过的元素：如果nums[i] == nums[i - 1] 并且 used[i - 1] == false，就说明：前一个树枝，使用了nums[i - 1]，也就是说同一树层使用过nums[i - 1].
+ 2. 树枝无需去重：同一树枝上的都是一个组合里的元素，不用去重
+ */
+// 时间复杂度: O(n * 2^n)
+// 空间复杂度: O(n)
+class Solution_10 {
+private:
+    vector<vector<int>> res;
+    vector<int> path;
+    
+    void backTrack(vector<int>&nums, int startIndex, vector<bool>& used){
+        res.push_back(path);
+        for(int i=startIndex;i<nums.size();i++){
+            if(i>0 && nums[i]==nums[i-1] && used[i-1]==false){
+                continue;
+            }
+            path.push_back(nums[i]);
+            used[i]=true;
+            backTrack(nums, i+1, used);
+            used[i]=false;
+            path.pop_back();
+        }
+    }
+    
+public:
+    vector<vector<int>> subsetsWithDup(vector<int>& nums) {
+        res.clear();path.clear();
+        vector<bool>used(nums.size(),false);
+        sort(nums.begin(),nums.end());
+        backTrack(nums, 0, used);
+        return res;
+    }
+};
+
 int main(int argc, const char * argv[]) {
     // insert code here...
     std::cout << "Hello, World!\n";
