@@ -1988,8 +1988,82 @@ sort(candidates.begin(),candidates.end());  // 排序：让相同的元素挨在
 ```
 
 #### 2.2 切割：一个字符串按一定规则，有几种切割方式
+##### 2.2.1 分割回文串:将字符串s分割成一些子串，使每个子串都是回文串
+* 切割问题类似组合问题: 对于字符串abcdef：
+    * 组合问题：选取一个a之后，在bcdef中再去选取第二个，选取b之后在cdef中再选取第三个.....。
+    * 切割问题：切割一个a之后，在bcdef中再去切割第二段，切割b之后在cdef中再切割第三段.....。
+* 时间复杂度: O(n * 2^n)
+* 空间复杂度: O(n^2)
+```cpp
+void backTrack(const string &s, int startIndex){    // 回溯部分
+        if(startIndex>=s.size()){
+            res.push_back(path);
+            return;
+        }
+        for(int i=startIndex;i<s.size();i++){       // 遍历切割位置
+            if(isPalindrome(s, startIndex, i)){     
+                // s[startIndex, i]是回文子串: startIndex, i分别为上一次、本次的切割位置
+                string str=s.substr(startIndex, i-startIndex+1);    // i-startIndex+1为子串长度
+                path.push_back(str);
+            }else{
+                continue;
+            }
+            backTrack(s, i+1);
+            path.pop_back();    // 回溯
+        }
+    }
+```
+###### 优化：避免重复判断回文串
+* 给定一个字符串s, 长度为n, 它成为回文字串的充分必要条件是：`s[0] == s[n-1]`且`s[1:n-1]`是回文字串
+```cpp
+ v
+void computePalindrome(const string& s) {
+        // isPalindrome[i][j] 代表 s[i:j](双边包括)是否是回文字串 
+        isPalindrome.resize(s.size(), vector<bool>(s.size(), false)); // 根据字符串s, 刷新布尔矩阵的大小
+        for (int i = s.size() - 1; i >= 0; i--) { 
+            // 需要倒序计算, 保证在i行时, i+1行已经计算好了
+            for (int j = i; j < s.size(); j++) {
+                if (j == i) {isPalindrome[i][j] = true;}
+                else if (j - i == 1) {isPalindrome[i][j] = (s[i] == s[j]);}
+                else {isPalindrome[i][j] = (s[i] == s[j] && isPalindrome[i+1][j-1]);}
+            }
+        }
+    }
+```
+
+###### 最少分割次数
+给你一个字符串 s，请你将 s 分割成一些子串，使每个子串都是回文串。
+* 枚举分割出的最右边那段子串的长度, 即`s[0..i]` 分割出的最后一个回文串.
+    * 状态转移方程：`f[i]=(0≤j<i)min{f[j]}+1`,其中 `s[j+1..i]` 是一个回文串
+* 时间复杂度：O(n^2)；空间复杂度：O(n^2)
+
+##### 2.2.2 IP地址
+* 时间复杂度: O(3^4)，IP地址最多包含4个数字，每个数字最多有3种可能的分割方式，则搜索树的最大深度为4，每个节点最多有3个子节点。
+* 空间复杂度: O(n)
+```cpp
+void backTrack(string &s, int startIndex, int pointerNum){
+        if(pointerNum==3){      // 终止条件：有3个逗号
+            if(isValid(s, startIndex, s.size()-1)){
+                res.push_back(s);
+            }
+            return;
+        }
+        for(int i=startIndex;i<s.size();i++){
+            if(isValid(s, startIndex, i)){      // [startIndex, i]的子串是否合法
+                s.insert(s.begin()+i+1, '.');   // 加上 '.'
+                pointerNum++;
+                backTrack(s,i+2,pointerNum);    // 回溯
+                pointerNum--;
+                s.erase(s.begin()+i+1);
+            }else{
+                break;
+            }
+        }
+    }
+```
 
 #### 2.3 子集：一个N个数的集合里，有多少符合条件的子集
+子集实质上是组合问题，它的集合无序，取过的元素不会重复取：写回溯算法的时候，for就要从startIndex开始，而不是从0开始！
 
 #### 2.4 排列：N个数按一定规则全排列，有几种排列方式（有序）
 
