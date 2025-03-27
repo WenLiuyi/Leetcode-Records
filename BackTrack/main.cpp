@@ -8,6 +8,9 @@
 #include <iostream>
 #include <vector>
 #include <queue>
+#include <unordered_set>
+#include <unordered_map>
+#include <map>
 using namespace std;
 
 // 1. T77.组合:给定两个整数 n 和 k，返回范围 [1, n] 中所有可能的 k 个数的组合。你可以按 任何顺序 返回答案。
@@ -387,7 +390,7 @@ private:
             return;
         }
         for(int i=startIndex;i<nums.size();i++){
-            path.push_back(nums[i]);    // 讲当前元素加入集合
+            path.push_back(nums[i]);    // 将当前元素加入集合
             backTrack(nums, i+1);
             path.pop_back();
         }
@@ -402,7 +405,6 @@ public:
 
 // 10. T90.子集II
 /* 给你一个整数数组 nums ，其中可能包含重复元素，请你返回该数组所有可能的 子集（幂集）。
- 
  解集 不能 包含重复的子集。返回的解集中，子集可以按 任意顺序 排列。*/
 /* 类似于组合II:
  去重逻辑：
@@ -429,7 +431,7 @@ private:
             path.pop_back();
         }
     }
-    
+
 public:
     vector<vector<int>> subsetsWithDup(vector<int>& nums) {
         res.clear();path.clear();
@@ -437,6 +439,233 @@ public:
         sort(nums.begin(),nums.end());
         backTrack(nums, 0, used);
         return res;
+    }
+};
+
+// 11. T491.非递增子序列
+/* 给你一个整数数组 nums ，找出并返回所有该数组中不同的递增子序列，递增子序列中 至少有两个元素。你可以按 任意顺序 返回答案。
+ 数组中可能含有重复元素，如出现两个整数相等，也可以视作递增序列的一种特殊情况。*/
+// 时间复杂度：O(n*2^n)；空间复杂度：O(n)
+class Solution_11_1 {
+private:
+    vector<vector<int>> res;
+    vector<int> path;
+    
+    void backTrack(vector<int>&nums, int startIndex){
+        if(path.size()>1){
+            res.push_back(path);
+        }
+        unordered_set<int>uset;
+        for(int i=startIndex;i<nums.size();i++){
+            if((uset.find(nums[i])!=uset.end() || (!path.empty() && nums[i]<path.back()))){
+                continue;   // 重复元素/递减：跳过
+            }
+            uset.insert(nums[i]);
+            path.push_back(nums[i]);
+            backTrack(nums,i+1);
+            path.pop_back();
+        }
+    }
+public:
+    vector<vector<int>> findSubsequences(vector<int>& nums) {
+        res.clear();path.clear();
+        backTrack(nums,0);
+        return res;
+    }
+};
+// 优化：数值范围[-100,100]，所以完全可以用数组来做哈希
+class Solution_11_2 {
+private:
+    vector<vector<int>> res;
+    vector<int> path;
+    
+    void backTrack(vector<int>&nums, int startIndex){
+        if(path.size()>1){
+            res.push_back(path);
+        }
+        int used[201]={0};
+        for(int i=startIndex;i<nums.size();i++){
+            if((used[nums[i]+100]==1 || (!path.empty() && nums[i]<path.back()))){
+                continue;   // 重复元素/递减：跳过
+            }
+            used[nums[i]+100]=1;
+            path.push_back(nums[i]);
+            backTrack(nums,i+1);
+            path.pop_back();
+        }
+    }
+public:
+    vector<vector<int>> findSubsequences(vector<int>& nums) {
+        res.clear();path.clear();
+        backTrack(nums,0);
+        return res;
+    }
+};
+
+// 12. T46.全排列：给定一个不含重复数字的数组 nums ，返回其 所有可能的全排列 。
+// 时间复杂度：O(n!)；空间复杂度：O(n)
+class Solution_12 {
+private:
+    vector<vector<int>> res;
+    vector<int> path;
+    
+    void backTrack(vector<int>& nums, vector<bool> &used){
+        if(path.size()==nums.size()){
+            res.push_back(path);
+            return;
+        }
+        for(int i=0;i<nums.size();i++){
+            if(used[i]==true) continue;
+            used[i]=true;
+            path.push_back(nums[i]);
+            backTrack(nums, used);
+            used[i]=false;
+            path.pop_back();
+        }
+    }
+public:
+    vector<vector<int>> permute(vector<int>& nums) {
+        res.clear();path.clear();
+        vector<bool>used(nums.size(),false);
+        backTrack(nums, used);
+        return res;
+    }
+};
+
+// 13. 全排列II：给定一个可包含重复数字的序列 nums ，按任意顺序 返回所有不重复的全排列
+// 时间复杂度：O(n!*n)；空间复杂度：O(n)
+class Solution_13 {
+private:
+    vector<vector<int>> res;
+    vector<int> path;
+    
+    void backTrack(vector<int>&nums, vector<bool>&used){
+        if(nums.size()==path.size()){
+            res.push_back(path);
+            return;
+        }
+        for(int i=0;i<nums.size();i++){
+            if(i>0 && nums[i]==nums[i-1] && used[i-1]==false){
+                continue;   // 同一树层去重
+            }
+            if(used[i]==true) continue;
+            used[i]=true;
+            path.push_back(nums[i]);
+            backTrack(nums, used);
+            used[i]=false;
+            path.pop_back();
+        }
+    }
+public:
+    vector<vector<int>> permuteUnique(vector<int>& nums) {
+        res.clear();path.clear();
+        vector<bool>used(nums.size(),false);
+        sort(nums.begin(),nums.end());
+        backTrack(nums, used);
+        return res;
+    }
+};
+
+// 14. T51.N皇后
+/* 按照国际象棋的规则，皇后可以攻击与之处在同一行或同一列或同一斜线上的棋子。
+ n 皇后问题 研究的是如何将 n 个皇后放置在 n×n 的棋盘上，并且使皇后彼此之间不能相互攻击。
+ 给你一个整数 n ，返回所有不同的 n 皇后问题 的解决方案。
+ 每一种解法包含一个不同的 n 皇后问题 的棋子放置方案，该方案中 'Q' 和 '.' 分别代表了皇后和空位。*/
+
+// 时间复杂度：O(n!)；空间复杂度：O(n).
+class Solution_14 {
+private:
+    vector<vector<string>> res;
+    void backTrack(vector<string>chessBoard, int n, int row){
+        if(row==n){
+            res.push_back(chessBoard);
+            return;
+        }
+        for(int col=0;col<n;col++){     // 检查(row,col)处是否可以放置棋子
+            if(isValid(chessBoard, n, row, col)){
+                chessBoard[row][col]='Q';   // 放置棋子
+                backTrack(chessBoard, n, row+1);
+                chessBoard[row][col]='.';   // 回溯
+            }
+        }
+    }
+    bool isValid(vector<string>&chessBoard, int n, int row, int col){
+        for(int i=0;i<row;i++){
+            if(chessBoard[i][col]=='Q'){    // 检查本列
+                return false;
+            }
+        }
+        for(int i=row-1,j=col-1;i>=0&&j>=0;i--,j--){    // 检查45度射线
+            if(chessBoard[i][j]=='Q'){
+                return false;
+            }
+        }
+        for(int i=row-1,j=col+1;i>=0&&j<n;i--,j++){     // 检查135度射线
+            if(chessBoard[i][j]=='Q'){
+                return false;
+            }
+        }
+        return true;
+    }
+public:
+    vector<vector<string>> solveNQueens(int n) {
+        res.clear();
+        vector<string>chessBoard(n,string(n,'.'));      // 初始化所有行:n个'.'
+        backTrack(chessBoard, n, 0);
+        return res;
+    }
+};
+
+// 15. T37.解数独
+/* 编写一个程序，通过填充空格来解决数独问题。
+ 数独的解法需 遵循如下规则：
+ 数字 1-9 在每一行只能出现一次。
+ 数字 1-9 在每一列只能出现一次。
+ 数字 1-9 在每一个以粗实线分隔的 3x3 宫内只能出现一次。（请参考示例图）
+ 数独部分空格内已填入了数字，空白格用 '.' 表示。*/
+class Solution_15 {
+private:
+    bool backTrack(vector<vector<char>>& board){
+        for(int i=0;i<board.size();i++){    // 遍历行
+            for(int j=0;j<board[0].size();j++){
+                if(board[i][j]=='.'){
+                    for(char k='1';k<='9';k++){
+                        if(isValid(board, i, j, k)){
+                            board[i][j]=k;
+                            if(backTrack(board)) return true;   // 找到一组即可
+                            board[i][j]='.';
+                        }
+                    }
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    bool isValid(vector<vector<char>>& board, int row, int col, char val){
+        for(int i=0;i<9;i++){   // 判断行内元素是否重复
+            if(board[row][i]==val){
+                return false;
+            }
+        }
+        for(int j=0;j<9;j++){   // 判断列内元素是否重复
+            if(board[j][col]==val){
+                return false;
+            }
+        }
+        int startRow=(row/3)*3, startCol=(col/3)*3;
+        for(int i=startRow;i<startRow+3;i++){
+            for(int j=startCol;j<startCol+3;j++){
+                if(board[i][j]==val){
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+public:
+    void solveSudoku(vector<vector<char>>& board) {
+        backTrack(board);
     }
 };
 

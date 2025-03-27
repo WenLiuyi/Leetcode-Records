@@ -1765,6 +1765,7 @@ public:
 > * 求普通二叉树的属性，一般是后序，一般要通过递归函数的返回值做计算（单纯求深度就用前序，二叉树：找所有路径 (opens new window)也用了前序，这是为了方便让父节点指向子节点）
 > * 求二叉搜索树的属性，使用中序，利用有序性。
 > ![alt text](20211030125421.png)
+
 #### 8.1 求二叉树的属性
 * 二叉树：是否对称 
     * 递归：后序，比较的是根节点的左子树与右子树是不是相互翻转
@@ -1870,7 +1871,18 @@ public:
     }
     }
     ```
+
 ### 2. 适用场景
+组合问题和排列问题是在树形结构的叶子节点上收集结果；而子集问题就是取树上所有节点的结果。
+* 子集问题：
+    * 时间复杂度：O(n*2^n)，每一个元素的状态有取与不取，所以时间复杂度为O(2^n)；构造每一组子集都需要填进数组，需要O(n)，最终时间复杂度：O(n × 2^n)
+    * 空间复杂度：O(n)，递归深度为n，所以系统栈所用空间为O(n)
+* 排列问题：
+    * 时间复杂度：O(n!)：每一层节点为n，第二层每一个分支都延伸了n-1个分支，再往下又是n-2个分支，所以一直到叶子节点一共就是 n * n-1 * n-2 * ..... 1 = n!。每个叶子节点都会有一个构造全排列填进数组的操作（对应的代码：`result.push_back(path)）`，该操作的复杂度为O(n)
+    * 空间复杂度：O(n)
+* 组合问题：
+    * 时间复杂度：O(n × 2^n)，实质是子集问题
+    * 空间复杂度：O(n)
 #### 2.1 组合：N个数里面按一定规则，找出k个数的集合（无序）
 * 需要startIndex的情况：
     * 求一个集合的组合，就需要startIndex；
@@ -2064,10 +2076,219 @@ void backTrack(string &s, int startIndex, int pointerNum){
 
 #### 2.3 子集：一个N个数的集合里，有多少符合条件的子集
 子集实质上是组合问题，它的集合无序，取过的元素不会重复取：写回溯算法的时候，for就要从startIndex开始，而不是从0开始！
+> 注：解集包括非叶节点
+##### 2.3.1 子集
+* 数组中的元素 互不相同。返回该数组所有可能的子集（幂集）,解集不能包含重复的子集。
+```cpp
+void backTrack(vector<int>&nums, int startIndex){
+        res.push_back(path);        // 收集当前子集(不加入当前startIndex)
+        if(startIndex>=nums.size()){
+            return;
+        }
+        for(int i=startIndex;i<nums.size();i++){
+            path.push_back(nums[i]);    // 将当前元素加入集合
+            backTrack(nums, i+1);
+            path.pop_back();
+        }
+    }
+```
+
+##### 2.3.2 子集II
+* 可能包含重复元素，返回该数组所有可能的子集（幂集）,解集不能包含重复的子集。
+    * 类似于组合II：树层去重，树枝无需去重
+```cpp
+void backTrack(vector<int>&nums, int startIndex, vector<bool>& used){
+        res.push_back(path);
+        for(int i=startIndex;i<nums.size();i++){
+            if(i>0 && nums[i]==nums[i-1] && used[i-1]==false){
+                continue;
+            }
+            path.push_back(nums[i]);
+            used[i]=true;
+            backTrack(nums, i+1, used);
+            used[i]=false;
+            path.pop_back();
+        }
+    }
+```
+
+##### 2.3.3 递增子序列
+* 找出并返回所有该数组中不同的递增子序列，递增子序列中至少有两个元素（数组中可能含有重复元素）
+```cpp
+void backTrack(vector<int>&nums, int startIndex){
+        if(path.size()>1){
+            res.push_back(path);
+        }
+        unordered_set<int>uset;
+        for(int i=startIndex;i<nums.size();i++){
+            if((uset.find(nums[i])!=uset.end() || (!path.empty() && nums[i]<path.back()))){
+                continue;   // 重复元素/递减：跳过
+            }
+            uset.insert(nums[i]);
+            path.push_back(nums[i]);
+            backTrack(nums,i+1);
+            path.pop_back();
+        }
+    }
+```
+###### 优化
+有：`-100 <= nums[i] <= 100`
+> 程序运行的时候对`unordered_set` 频繁`insert`，`unordered_set`需要做哈希映射，耗费时间；每次重新定义`set`，insert的时候，其底层的符号表也要做相应的扩充。
 
 #### 2.4 排列：N个数按一定规则全排列，有几种排列方式（有序）
+排列是有序的：[1,2] 和 [2,1] 是两个集合，这和之前的子集与组合不同。
+元素1在[1,2]中已经使用过，但在[2,1]中需要再次使用元素1，所以**处理排列问题就不使用startIndex**。
+* 终止条件：`nums.size()==path.size()`
 
-#### 2.5 棋盘：N皇后，解数独等等
+##### 2.4.1 全排列
+* 给定一个不含重复数字的数组 nums ，返回其所有可能的全排列
+    * 采用一个数组`used`记录：是否使用过该元素
+    * 时间复杂度：O(n!)；空间复杂度：O(n)
+```cpp
+void backTrack(vector<int>& nums, vector<bool> &used){
+        if(path.size()==nums.size()){
+            res.push_back(path);
+            return;
+        }
+        for(int i=0;i<nums.size();i++){
+            if(used[i]==true) continue;
+            used[i]=true;
+            path.push_back(nums[i]);
+            backTrack(nums, used);
+            used[i]=false;
+            path.pop_back();
+        }
+    }
+```
+
+##### 2.4.2 全排列II
+* 给定一个可包含重复数字的序列 nums ，按任意顺序 返回所有不重复的全排列。
+    * 要去重，先排序；
+    * 树层去重
+```cpp
+void backTrack(vector<int>&nums, vector<bool>&used){
+        if(nums.size()==path.size()){
+            res.push_back(path);
+            return;
+        }
+        for(int i=0;i<nums.size();i++){
+            if(i>0 && nums[i]==nums[i-1] && used[i-1]==false){
+                continue;   // 同一树层去重
+            }
+            if(used[i]==true) continue;
+            used[i]=true;
+            path.push_back(nums[i]);
+            backTrack(nums, used);
+            used[i]=false;
+            path.pop_back();
+        }
+```
+
+##### 2.4.2 全排列II
+* 给定一个可包含重复数字的序列 nums ，按任意顺序 返回所有不重复的全排列。
+    * **去重一定要对元素进行排序**，这样我们才方便通过相邻的节点来判断是否重复使用
+
+#### 2.5 棋盘
+##### 2.5.1 N皇后
+* 时间复杂度：O(n!)；空间复杂度：O(n).
+```cpp
+class Solution {
+private:
+    vector<vector<string>> res;
+    void backTrack(vector<string>chessBoard, int n, int row){
+        if(row==n){
+            res.push_back(chessBoard);
+            return;
+        }
+        for(int col=0;col<n;col++){     // 检查(row,col)处是否可以放置棋子
+            if(isValid(chessBoard, n, row, col)){
+                chessBoard[row][col]='Q';   // 放置棋子
+                backTrack(chessBoard, n, row+1);
+                chessBoard[row][col]='.';   // 回溯
+            }
+        }
+    }
+    bool isValid(vector<string>&chessBoard, int n, int row, int col){
+        for(int i=0;i<row;i++){
+            if(chessBoard[i][col]=='Q'){    // 检查本列
+                return false;
+            }
+        }
+        for(int i=row-1,j=col-1;i>=0&&j>=0;i--,j--){    // 检查45度射线
+            if(chessBoard[i][j]=='Q'){
+                return false;
+            }
+        }
+        for(int i=row-1,j=col+1;i>=0&&j<n;i--,j++){     // 检查135度射线
+            if(chessBoard[i][j]=='Q'){
+                return false;
+            }
+        }
+        return true;
+    }
+public:
+    vector<vector<string>> solveNQueens(int n) {
+        res.clear();
+        vector<string>chessBoard(n,string(n,'.'));      // 初始化所有行:n个'.'
+        backTrack(chessBoard, n, 0);
+        return res;
+    }
+};
+```
+
+##### 2.5.3 解数独
+* 编写一个程序，通过填充空格来解决数独问题。数独的解法需 遵循如下规则：
+    * 数字 1-9 在每一行只能出现一次。
+    * 数字 1-9 在每一列只能出现一次。
+    * 数字 1-9 在每一个以粗实线分隔的 3x3 宫内只能出现一次。（请参考示例图）
+    数独部分空格内已填入了数字，空白格用 '.' 表示。
+```cpp
+class Solution_15 {
+private:
+    bool backTrack(vector<vector<char>>& board){
+        for(int i=0;i<board.size();i++){    // 遍历行
+            for(int j=0;j<board[0].size();j++){
+                if(board[i][j]=='.'){
+                    for(char k='1';k<='9';k++){
+                        if(isValid(board, i, j, k)){
+                            board[i][j]=k;
+                            if(backTrack(board)) return true;   // 找到一组即可
+                            board[i][j]='.';
+                        }
+                    }
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    bool isValid(vector<vector<char>>& board, int row, int col, char val){
+        for(int i=0;i<9;i++){   // 判断行内元素是否重复
+            if(board[row][i]==val){
+                return false;
+            }
+        }
+        for(int j=0;j<9;j++){   // 判断列内元素是否重复
+            if(board[j][col]==val){
+                return false;
+            }
+        }
+        int startRow=(row/3)*3, startCol=(col/3)*3;
+        for(int i=startRow;i<startRow+3;i++){
+            for(int j=startCol;j<startCol+3;j++){
+                if(board[i][j]==val){
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+public:
+    void solveSudoku(vector<vector<char>>& board) {
+        backTrack(board);
+    }
+};
+```
 
 ## 贪心
 ## 分治
