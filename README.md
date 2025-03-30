@@ -2291,8 +2291,61 @@ public:
 ```
 
 ## 贪心
+### 1. 算法思想
+**选择每一阶段的局部最优，从而达到全局最优。**
+### 2. 一些例子
+#### 2.1 序列问题
+
+#### 2.2 买卖股票问题
+
+#### 2.3 区间问题
+##### 2.3.1 跳跃游戏
+* 给你一个非负整数数组 `nums` ，你最初位于数组的 第一个下标。数组中的每个元素代表你在该位置可以跳跃的最大长度。判断你是否能够到达最后一个下标，如果可以，返回 `true` ；否则，返回 `false`。
+    * 每次更新可覆盖的最大范围`cover`
+```cpp
+class Solution {
+public:
+    bool canJump(vector<int>& nums) {
+        if(nums.size()==1) return true;
+        
+        int cover=0;
+        for(int i=0;i<=cover;i++){
+            cover=max(cover,i+nums[i]);
+            if(cover>=nums.size()-1) return true;
+        }
+        return false;
+    }
+};
+```
+###### 跳跃游戏II：求最小跳跃次数
+* 思路：以最小的步数，最大程度增加覆盖范围
+```cpp
+class Solution {
+public:
+    int jump(vector<int>& nums) {
+        if(nums.size()==1) return 0;
+        
+        int ans=0;
+        int curDis=0,nextDis=0;
+        
+        for(int i=0;i<nums.size();i++){
+            nextDis=max(nextDis,nums[i]+i);     // 更新下一步覆盖的最远下标
+            if(i==curDis){      // 必须往下走一步
+                curDis=nextDis;
+                ans++;
+                if(nextDis>=nums.size()-1) break;
+            }
+        }
+        return ans;
+    }
+};
+```
+
 ## 分治
+
 ## 动态规划
+
+
 ## 单调栈
 ### 1. 适用场景
 * 一维数组，要寻找任一个元素的右边或者左边，第一个比自己大或者小的元素的位置。
