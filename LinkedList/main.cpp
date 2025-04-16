@@ -545,6 +545,70 @@ public:
     }
 };
 
+// 13. 合并K个升序链表
+// 法一：按顺序两两合并
+// 时间复杂度：O(n*k^2)；空间复杂度：O(1)
+class Solution_13_1 {
+public:
+    ListNode * mergeTwoLists(ListNode* l1, ListNode* l2){
+        if(l1==nullptr || l2==nullptr) return (l1==nullptr)?l2:l1;
+        ListNode *dummy=new ListNode(0), *cur=dummy, *pt1=l1,*pt2=l2;
+        while(pt1!=nullptr && pt2!=nullptr){
+            if(pt1->val<pt2->val){
+                cur->next=pt1;pt1=pt1->next;
+            }else{
+                cur->next=pt2;pt2=pt2->next;
+            }
+            cur=cur->next;
+        }
+        if(pt1!=nullptr) cur->next=pt1;
+        if(pt2!=nullptr) cur->next=pt2;
+        
+        return dummy->next;
+    }
+    ListNode* mergeKLists(vector<ListNode*>& lists) {
+        ListNode *ans=nullptr;
+        int n=lists.size();
+        for(int i=0;i<n;i++){
+            ans=mergeTwoLists(ans, lists[i]);
+        }
+        return ans;
+    }
+};
+
+// 法二：分治合并
+// 时间复杂度：O(klogk*n)；空间复杂度：O(logk)
+class Solution_13_2 {
+public:
+    ListNode * mergeTwoLists(ListNode* l1, ListNode* l2){
+        if(l1==nullptr || l2==nullptr) return (l1==nullptr)?l2:l1;
+        ListNode *dummy=new ListNode(0), *cur=dummy, *pt1=l1,*pt2=l2;
+        while(pt1!=nullptr && pt2!=nullptr){
+            if(pt1->val<pt2->val){
+                cur->next=pt1;pt1=pt1->next;
+            }else{
+                cur->next=pt2;pt2=pt2->next;
+            }
+            cur=cur->next;
+        }
+        if(pt1!=nullptr) cur->next=pt1;
+        if(pt2!=nullptr) cur->next=pt2;
+        
+        return dummy->next;
+    }
+    
+    ListNode* merge(vector<ListNode *>&lists, int l, int r){
+        if(l==r) return lists[l];
+        else if(l>r) return nullptr;
+        int mid=(l+r)>>1;
+        return mergeTwoLists(merge(lists,l,mid), merge(lists,mid+1,r));
+    }
+    
+    ListNode* mergeKLists(vector<ListNode*>& lists) {
+        return merge(lists,0,lists.size()-1);
+    }
+};
+
 int main(int argc, const char * argv[]) {
     // insert code here...
     std::cout << "Hello, World!\n";
