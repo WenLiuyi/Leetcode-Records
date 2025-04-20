@@ -1,7 +1,7 @@
 # Leetcode-C++
 ## STL数据结构
 ### 1. 优先队列(priority_queue)
-* 容器适配器：对外接口只是从队头取元素，从队尾添加元素，再无其他取元素的方式。
+* **容器适配器**：对外接口只是从队头取元素，从队尾添加元素，再无其他取元素的方式。
 * 其中的元素按照某种优先级顺序排列，每次访问或删除的元素都是优先级最高的元素。
 #### 1.1 基本特性
 1. 默认行为：`std::priority_queue` 是一个**最大堆**，即优先级最高的元素是最大的元素。
@@ -1863,7 +1863,7 @@ public:
         存放结果;
         return;
     }
-
+    
     for (选择：本层集合中元素（树中节点孩子的数量就是集合的大小）) {
         处理节点;
         backtracking(路径，选择列表); // 递归
@@ -1979,7 +1979,7 @@ public:
         * `used[i - 1] == true`，说明同一树枝`candidates[i - 1]`使用过；
         * `used[i - 1] == false`，说明同一树层`candidates[i - 1]`使用过
     2. 树枝无需去重：同一树枝上的都是一个组合里的元素，不用去重
-![alt text](20221021163812.png)
+    ![alt text](20221021163812.png)
 ```cpp
 for(int i=startIndex;i<candidates.size() && sum+candidates[i]<=target;i++){
     if(i>0 && candidates[i]==candidates[i-1] && used[i-1]==false){
@@ -2028,19 +2028,18 @@ void backTrack(const string &s, int startIndex){    // 回溯部分
 ###### 优化：避免重复判断回文串
 * 给定一个字符串s, 长度为n, 它成为回文字串的充分必要条件是：`s[0] == s[n-1]`且`s[1:n-1]`是回文字串
 ```cpp
- v
 void computePalindrome(const string& s) {
-        // isPalindrome[i][j] 代表 s[i:j](双边包括)是否是回文字串 
-        isPalindrome.resize(s.size(), vector<bool>(s.size(), false)); // 根据字符串s, 刷新布尔矩阵的大小
-        for (int i = s.size() - 1; i >= 0; i--) { 
-            // 需要倒序计算, 保证在i行时, i+1行已经计算好了
-            for (int j = i; j < s.size(); j++) {
-                if (j == i) {isPalindrome[i][j] = true;}
-                else if (j - i == 1) {isPalindrome[i][j] = (s[i] == s[j]);}
-                else {isPalindrome[i][j] = (s[i] == s[j] && isPalindrome[i+1][j-1]);}
-            }
+    // isPalindrome[i][j] 代表 s[i:j](双边包括)是否是回文字串 
+    isPalindrome.resize(s.size(), vector<bool>(s.size(), false)); // 根据字符串s, 刷新布尔矩阵的大小
+    for (int i = s.size() - 1; i >= 0; i--) { 
+        // 需要倒序计算, 保证在i行时, i+1行已经计算好了
+        for (int j = i; j < s.size(); j++) {
+            if (j == i) {isPalindrome[i][j] = true;}
+            else if (j - i == 1) {isPalindrome[i][j] = (s[i] == s[j]);}
+            else {isPalindrome[i][j] = (s[i] == s[j] && isPalindrome[i+1][j-1]);}
         }
     }
+}
 ```
 
 ###### 最少分割次数
@@ -2341,12 +2340,639 @@ public:
 };
 ```
 
+
+
 ## 分治
+
+
+
+
 
 ## 动态规划
 
+### 五部曲
+
+1. 确定dp数组，以及下标的含义；
+2. 确定递推公式；
+3. dp数组初始化；
+4. 确定遍历顺序；
+5. 举例推导dp数组。
+
+### 基础问题
+
+* 不同路径：从地图左上移至右下角，dp为起点到当前位置的路径数
+* 整数拆分（得最大乘积）：dp[i]为i拆分可得的最大乘积
+* 不同的二叉搜索树：dp为节点1~i构成的二叉搜索树个数；
+  * dp[i]=sum(dp[j为头节点左子树节点数量]*dp[j为头节点右子树节点数量]), j=1,...,i
+
+### 背包问题
+
+#### 分类
+
+![20210117171307407](/Users/lisa/Desktop/20210117171307407.png)
+
+#### 0-1背包
+
+> 有n件物品和一个最多能背重量为w 的背包。第i件物品的重量是weight[i]，得到的价值是value[i] 。**每件物品只能用一次**，求解将哪些物品装入背包里物品价值总和最大。
+
+* 暴力解法：每一件物品有两个状态，取或者不取；使用回溯法搜索出所有的情况。时间复杂度为O(2^n)
+
+##### 理论基础
+
+###### 二维dp数组
+
+* 动态规划：
+
+  * dp[i] [j]表示：从下标为0~i的物品中任意取，放进容量为j的背包，最大价值总和。
+
+  * 递归公式：`dp[i] [j]= max(dp[i - 1] [j], dp[i - 1] [j - weight[i]] + value[i]);`
+
+    * **不放物品i**：最大价值为dp[i - 1] [j]；
+    * **放物品i**：空出物品i的容量后，背包容量为j-weight[i]，dp[i - 1] [j - weight[i]]为背包不放物品i时的最大价值，那么dp[i - 1] [j - weight[i]] + value[i] （物品i的价值），就是背包放物品i得到的最大价值。
+
+  * 初始化：dp[i] [0]=0；当 j<weight[0]时，dp[0] [j]=0；当 j>=weight[0]时，dp[0] [j]=value[0]
+
+  * 遍历顺序：按背包或按容量均可
+
+    ```c++
+    #include <bits/stdc++.h>
+    using namespace std;
+    
+    int main() {
+        int n, bagweight;// bagweight代表行李箱空间
+        cin >> n >> bagweight;
+        vector<int> weight(n, 0); // 存储每件物品所占空间
+        vector<int> value(n, 0);  // 存储每件物品价值
+    
+        for(int i = 0; i < n; ++i) {
+            cin >> weight[i];
+        }
+        for(int j = 0; j < n; ++j) {
+            cin >> value[j];
+        }
+        // dp数组, dp[i][j]代表行李箱空间为j的情况下,从下标为[0, i]的物品里面任意取,能达到的最大价值
+        vector<vector<int>> dp(weight.size(), vector<int>(bagweight + 1, 0));
+    
+        // 初始化, 因为需要用到dp[i - 1]的值
+        // j < weight[0]已在上方被初始化为0
+        // j >= weight[0]的值就初始化为value[0]
+        for (int j = weight[0]; j <= bagweight; j++) {
+            dp[0][j] = value[0];		// 只能放入1次0号物品
+        }
+    
+        for(int i = 1; i < weight.size(); i++) { // 遍历物品
+            for(int j = 0; j <= bagweight; j++) { // 遍历行李箱容量
+                if (j < weight[i]) dp[i][j] = dp[i - 1][j]; 
+              // 如果装不下这个物品,那么就继承dp[i - 1][j]的值
+                else {
+                    dp[i][j] = max(dp[i - 1][j], dp[i - 1][j - weight[i]] + value[i]);
+                }
+            }
+        }
+        cout << dp[n - 1][bagweight] << endl;
+        return 0;
+    }
+    ```
+
+###### 一维dp数组（滚动数组）
+
+二维数组中，递推公式为：dp[i] [j] = max(dp[i - 1] [j], dp[i - 1] [j - weight[i]] + value[i]);
+
+如果将上一层拷贝到当前层，可转为：dp[i] [j] = max(dp[i] [j], dp[i] [j - weight[i]] + value[i]);
+
+滚动dp数组：**dp[j] = max(dp[j], dp[j - weight[i]] + value[i]);**
+
+* Dp[j]：容量为j的背包，所背的最大价值。
+
+```c++
+// 一维dp数组实现
+#include <iostream>
+#include <vector>
+using namespace std;
+
+int main() {
+    int M, N;cin >> M >> N;		// 读取 M 和 N
+    vector<int> costs(M);
+    vector<int> values(M);
+
+    for (int i = 0; i < M; i++) {
+        cin >> costs[i];
+    }
+    for (int j = 0; j < M; j++) {
+        cin >> values[j];
+    }
+
+    // 创建一个动态规划数组dp，初始值为0
+    vector<int> dp(N + 1, 0);
+
+    // 外层循环遍历每个物品
+    for (int i = 0; i < M; ++i) {
+        // 内层循环从 N 空间逐渐减少到当前物品所占空间
+        for (int j = N; j >= costs[i]; --j) {
+            // 考虑当前物品选择和不选择的情况，选择最大值
+            dp[j] = max(dp[j], dp[j - costs[i]] + values[i]);
+        }
+    }
+    // 输出dp[N]，即在给定 N 行李空间可以携带的最大价值
+    cout << dp[N] << endl;
+    return 0;
+}
+```
+
+##### 变式
+
+###### 分割等和子集
+
+> 给你一个 只包含正整数 的 非空 数组 nums 。
+> 请你判断是否可以将这个数组分割成两个子集，使得两个子集的元素和相等。
+
+**集合中每个元素只能使用1次：0-1背包问题**
+
+* dp[j]:容量为j的背包中，所背物品的最大价值；
+* 状态转移：`dp[j]=max(dp[j],dp[j-weight[i]]+value[i]);`这里，物品i的重量、价值均为nums[i]；
+* 初始化：总和不大于20000，最大价值为其中的一半，初始化为：`vector<int> dp(10001, 0);`
+* 遍历顺序：1. 外层循环遍历每个物品； 2. 内层循环遍历背包，从最大空间减少到当前物品所占空间
+
+时间复杂度：O(n^2)；空间复杂度：O(n)
+
+```c++
+class Solution_14 {
+public:
+    bool canPartition(vector<int>& nums) {
+        int sum=0;
+        for(int i=0;i<nums.size();i++){
+            sum+=nums[i];
+        }
+        if(sum%2) return false;
+        int target=sum/2;
+        // 0-1背包
+        vector<int>dp(10001,0);
+        for(int i=0;i<nums.size();i++){
+            for(int j=target;j>=nums[i];j--){
+                dp[j]=max(dp[j],dp[j-nums[i]]+nums[i]);
+            }
+        }
+        if(dp[target]==target) return true;
+        else return false;
+    }
+};
+```
+
+###### 打家劫舍
+
+问题I
+
+> 不能闯入相邻房间，求偷窃可得的最大金额。
+
+* dp[i]：下标0~i，可偷窃的最大金额
+
+* 状态转移：dp[i]=max(dp[i-1],dp[i-2]+nums[i]); 即前一个房间偷/不偷
+
+* 初始化：dp[0]=0, dp[1]=max(nums[0], nums[1]).
+
+问题II
+
+> 相对于问题I，首尾相接成环。
+
+* 成环考虑三种情况：1. 不包含收尾元素；2. 包含首元素，不含尾元素；3. 包含尾元素，不含首元素
+
+```c++
+int res1=robRange(nums, 0, nums.size()-2);
+int res2=robRange(nums, 1, nums.size()-1);
+return max(res1,res2);
+```
+
+问题III
+
+> 二叉树场景
+
+```c++
+// 1. dp数组：包含2个值：偷、不偷当前节点的最大价值
+// 2. 遍历顺序：后序遍历
+// 时间复杂度：O(n)；空间复杂度：O(logn)
+class Solution_11_2 {
+public:
+    vector<int>robTree(TreeNode *cur){      // 返回值为数组：下标0:偷；下标1：不偷
+        if(cur==nullptr) return vector<int>{0,0};
+        vector<int>left=robTree(cur->left);
+        vector<int>right=robTree(cur->right);
+        // 偷cur节点
+        int val0=cur->val+left[1]+right[1];
+        // 不偷cur节点
+        int val1=max(left[0],left[1])+max(right[0],right[1]);
+        return {val0,val1};
+    }
+    
+    int rob(TreeNode* root) {
+        vector<int>res=robTree(root);
+        return max(res[0],res[1]);
+    }
+};
+```
+
+
+
+#### 完全背包
+
+##### 理论基础
+
+###### 二维dp数组
+
+> 有N件物品和一个最多能背重量为W的背包。第i件物品的重量是weight[i]，得到的价值是value[i] 。**每件物品都有无限个（也就是可以放入背包多次）**，求解将哪些物品装入背包里物品价值总和最大。
+
+**完全背包和01背包问题唯一不同的地方在于：每种物品有无限件**。
+
+* dp[i] [j] 表示：从下标为[0-i]的物品，每个物品可以取无限次，放进容量为j的背包，价值总和最大是多少；
+
+* 状态转移：`dp[i][j] = max(dp[i - 1][j], dp[i][j - weight[i]] + value[i]);`
+
+  > 0-1背包的区别：`dp[i][j]= max(dp[i-1][j], dp[i-1][j-weight[i]] + value[i]);`
+
+  * **不放物品i**：背包容量为j，里面不放物品i的最大价值是dp[i - 1] [j]；
+  * **放物品i**：背包空出物品i的容量后，背包容量为j - weight[i]，dp[i] [j - weight[i]] 为背包容量为j - weight[i]且不放物品i的最大价值；那么dp[i] [j - weight[i]] + value[i] （物品i的价值），就是背包放物品i得到的最大价值。
+
+```c++
+vector<vector<int>> dp(n, vector<int>(bagWeight + 1, 0));
+// 初始化
+for (int j = weight[0]; j <= bagWeight; j++)
+    dp[0][j] = dp[0][j - weight[0]] + value[0];		// 可以反复放入0号物品
+
+for (int i = 1; i < n; i++) { // 遍历物品
+    for(int j = 0; j <= bagWeight; j++) { // 遍历背包容量
+        if (j < weight[i]) dp[i][j] = dp[i - 1][j];
+        else dp[i][j] = max(dp[i - 1][j], dp[i][j - weight[i]] + value[i]);
+    }
+}
+cout << dp[n - 1][bagWeight] << endl;
+```
+
+###### 一维dp数组
+
+> 0-1背包：一维dp数组一定是：外层遍历物品，内层倒序遍历背包容量；
+>
+> 完全背包：一维dp数组，**两个for循环嵌套顺序是无所谓的**！
+
+```c++
+vector<int> dp(bagWeight + 1, 0);
+for(int j = 0; j <= bagWeight; j++) { // 遍历背包容量
+    for(int i = 0; i < weight.size(); i++) { // 遍历物品
+        if (j - weight[i] >= 0) dp[j] = max(dp[j], dp[j - weight[i]] + value[i]);
+    }
+}
+cout << dp[bagWeight] << endl;
+```
+
+
+
+两层for循环的前后顺序。
+
+* **求组合数：外层for循环遍历物品，内层for遍历背包**（例：零钱兑换II）
+
+* **求排列数：外层for遍历背包，内层for循环遍历物品**
+
+
+
+##### 变式
+
+###### 零钱兑换
+
+问题I
+
+> 给你一个整数数组 coins ，表示不同面额的硬币；以及一个整数 amount ，表示总金额。
+>
+>  计算并返回可以凑成总金额所需的 最少的硬币个数 。如果没有任何一种硬币组合能组成总金额，返回 -1 。
+>
+>  你可以认为每种硬币的数量是无限的。
+
+* `dp[j]`：凑足金额`j`，所需的最少硬币个数
+* 状态转移：`dp[j]=min(dp[j-coins[i]]+1,dp[j]);`
+* 初始化：`dp[0]=0`
+
+```c++
+class Solution_14 {
+public:
+    int coinChange(vector<int>& coins, int amount) {
+        vector<int>dp(amount+1,INT_MAX);
+        dp[0]=0;
+        for(int i=0;i<coins.size();i++){
+            for(int j=coins[i];j<=amount;j++){
+                if(dp[j-coins[i]]!=INT_MAX){
+                    dp[j]=min(dp[j],dp[j-coins[i]]+1);
+                }
+            }
+        }
+        if(dp[amount]==INT_MAX) return -1;
+        return dp[amount];
+    }
+};
+```
+
+
+
+问题II（**组合问题**）
+
+> 给你一个整数数组 coins 表示不同面额的硬币，另给一个整数 amount 表示总金额。
+>
+> 请你计算并返回可以凑成总金额的硬币组合数。
+>
+> 如果任何硬币组合都无法凑出总金额，返回 0 。假设每一种面额的硬币有无限个。
+>
+> 题目数据保证结果符合 32 位带符号整数。
+
+* 法一：二维dp数组
+
+  * `dp[i][j]`: 使用下标0~i的`coins[i]`，能够凑满容量为j的背包，有`dp[i][j]`种方法；
+  * 状态转移（完全背包）：`dp[i][j]=max(dp[i-1][j], dp[i][j-weight[i]]+value[i]);`
+
+  本题中，组合数：`dp[i][j]=dp[i-1][j]（不装第i个物品）+dp[i][j-weight[i]]（装入第i个物品）`
+
+```c++
+class Solution_15_1 {
+public:
+    int change(int amount, vector<int>& coins) {
+        vector<vector<uint64_t>>dp(coins.size(),vector<uint64_t>(amount+1,0));
+        // 初始化i=0的行
+        for(int j=0;j<=amount;j++){     // 当前金额为：coins[i]的整数倍
+            if(j%coins[0]==0) dp[0][j]=1;
+        }
+        // 初始化j=0的列
+        for(int i=0;i<coins.size();i++){    // 一种方案：啥也不放
+            dp[i][0]=1;
+        }
+        for(int i=1;i<coins.size();i++){    // 行：遍历物品
+            for(int j=0;j<=amount;j++){     // 列：遍历背包容量
+                if(j<coins[i]) dp[i][j]=dp[i-1][j];
+                else dp[i][j]=dp[i-1][j]+dp[i][j-coins[i]];
+            }
+        }
+        return dp[coins.size()-1][amount];
+    }
+};
+```
+
+* 法二：一维dp数组
+  * `dp[j]`: 凑成总金额j的货币组合数为`dp[j]`
+  * 时间复杂度：O(m*n)；空间复杂度：O(m). m为amount，n为coins的长度
+
+```c++
+class Solution_15_2 {
+public:
+    int change(int amount, vector<int>& coins) {
+        vector<uint64_t>dp(amount+1,0);
+        dp[0]=1;
+        for(int i=0;i<coins.size();i++){        // 行：遍历物品
+            for(int j=coins[i];j<=amount;j++){  // 列：遍历背包容量
+                if(dp[j]+dp[j-coins[i]]<INT_MAX){
+                    dp[j]=dp[j]+dp[j-coins[i]];
+                }
+            }
+        }
+        return dp[amount];
+    }
+};
+```
+
+
+
+###### 完全平方数
+
+给你一个整数 n ，返回 和为 n 的完全平方数的最少数量 。
+
+* `dp[i]`:和为`i`的完全平方数的最少数量
+* 状态转移：`dp[i]=min(1+f[i-j^2], j=1,...,sqrt(i).`
+
+时间复杂度：O(n*sqrt(n))；空间复杂度：O(n).
+
+```c++
+class Solution_12 {
+public:
+    int numSquares(int n) {
+        vector<int>dp(n+1);
+        for(int i=1;i<=n;i++){
+            dp[i]=INT_MAX;
+            for(int j=1;j*j<=i;j++){
+                dp[i]=min(dp[i],1+dp[i-j*j]);
+            }
+        }
+        return dp[n];
+    }
+};
+```
+
+
+
+###### 单词划分
+
+> 给你一个字符串 s 和一个字符串列表 wordDict 作为字典。如果可以利用字典中出现的一个或多个单词拼接出 s 则返回 true。
+>
+>  注意：不要求字典中出现的单词全部都使用，并且字典中的单词可以重复使用。
+
+* 法一：回溯
+  * 优化：记忆化递归，使用memory数组保存：每次计算的以startIndex起始的计算结果
+  * 时间复杂度：O(2^n)
+
+```c++
+class Solution_16_1 {
+public:
+    bool backTrack(const string &s, const unordered_set<string>& wordSet,
+                   vector<bool>&memory,int startIndex){
+        if(startIndex>=s.size()){
+            return true;
+        }
+        if(!memory[startIndex]) return memory[startIndex];
+        for(int i=startIndex;i<s.size();i++){
+            string word=s.substr(startIndex,i-startIndex+1);
+            if(wordSet.find(word)!=wordSet.end() && backTrack(s,wordSet,memory,i+1)){
+                return true;
+            }
+        }
+        memory[startIndex]=false;
+        return false;
+    }
+    bool wordBreak(string s, vector<string>& wordDict) {
+        unordered_set<string>wordSet(wordDict.begin(),wordDict.end());
+        vector<bool>memory(s.size(),true);
+        return backTrack(s,wordSet,memory,0);
+    }
+};
+```
+
+* 法二：动态规划
+  * `dp[i]=true`：字符串[0,i]可以使用字典中单词拼接而成
+    * 若`dp[j]=true`，且`[j,i]`区间的字符串出现在字典中，则：`dp[i]=true(j<i)`
+  * 时间复杂度：O(n^3)，因为substr返回子串的副本是O(n)的复杂度（这里的n是substring的长度）
+  * 空间复杂度：O(n)
+  * **排列问题（考虑顺序）：外层遍历背包容量，内层遍历物品**
+
+```c++
+class Solution_16_2 {
+public:
+    bool wordBreak(string s, vector<string>& wordDict) {
+        unordered_set<string>wordSet(wordDict.begin(),wordDict.end());
+        vector<bool>dp(s.size()+1,false);
+        dp[0]=true;
+        
+        for(int i=1;i<=s.size();i++){       // 遍历背包容量
+            for(int j=0;j<i;j++){           // 遍历物品
+                string word=s.substr(j,i-j);    // word区间：[j,i)
+                if(dp[j] && wordSet.find(word)!=wordSet.end()){
+                    dp[i]=true;
+                }
+            }
+        }
+        return dp[s.size()];
+    }
+};
+```
+
+
+
+### 子序列问题
+
+#### 子序列（连续）
+
+##### 乘积最大子数组
+
+> 给你一个整数数组 nums ，请你找出数组中乘积最大的非空连续 子数组（该子数组中至少包含一个数字），并返回该子数组所对应的乘积。
+>
+>  测试用例的答案是一个 32-位 整数。
+
+* 法一：动态规划
+  * `maxDp[i]`: 以第i个元素结尾的最大子数组乘积；`minDp[i]`: 以第i个元素结尾的最小子数组乘积
+  * 时间复杂度：O(n)；空间复杂度：O(n)
+
+```c++
+class Solution_17_1 {
+public:
+    int maxProduct(vector<int>& nums) {
+        vector<long>maxDp(nums.size(),0), minDp(nums.size(),0);
+        maxDp[0]=minDp[0]=nums[0];
+        
+        for(int i=1;i<nums.size();i++){
+            maxDp[i]=max((long)nums[i],max(maxDp[i-1]*nums[i],minDp[i-1]*nums[i]));
+            minDp[i]=min((long)nums[i],min(maxDp[i-1]*nums[i],minDp[i-1]*nums[i]));
+            if(minDp[i]<INT_MIN){
+                minDp[i]=nums[i];
+            }
+        }
+        return *max_element(maxDp.begin(),maxDp.end());
+    }
+};
+```
+
+* 优化空间：第i个状态，只与第i-1个状态相关：maxF,minF记录以当前元素为结尾的最大/最小乘积
+
+```c++
+int maxProduct(vector<int>& nums) {
+    long maxF=nums[0],minF=nums[0],ans=nums[0];
+    for(int i=1;i<nums.size();i++){
+        long pre_maxF=maxF, pre_minF=minF;
+        maxF=max((long)nums[i],max(pre_maxF*nums[i],pre_minF*nums[i]));
+        minF=min((long)nums[i],min(pre_maxF*nums[i],pre_minF*nums[i]));
+        if(minF<INT_MIN){
+            minF=nums[i];
+        }
+        ans=max(maxF,ans);
+    }
+    return ans;
+}
+```
+
+##### 最长有效括号
+
+> 给你一个只包含 '(' 和 ')' 的字符串，找出最长有效（格式正确且连续）括号子串的长度。
+
+* 法一：动态规划
+  * `dp[i]`:以下标`i`字符结尾的最长有效括号的长度
+  * 时间复杂度：O(n)；空间复杂度：O(n)
+
+```c++
+class Solution_19_1 {
+public:
+    int longestValidParentheses(string s) {
+        int res=0,n=s.length();
+        vector<int>dp(n,0);
+        for(int i=1;i<n;i++){
+            if(s[i]==')'){
+                if(s[i-1]=='('){
+                  // 1. 前一个字符为'(':dp[i]=dp[i-2]+2
+                    dp[i]=(i>=2?dp[i-2]:0)+2;   
+                }else{  
+                  // 2. 前一个字符为')',字符串形如"...))"
+                    if(i-dp[i-1]>0 && s[i-dp[i-1]-1]=='('){
+                        // 刨除dp[i-1]的部分，下标i-dp[i-1]-1和i分别为'(',')'，加上这两个
+                        dp[i]=dp[i-1]+((i-dp[i-1])>=2 ? dp[i-dp[i-1]-2]:0)+2;
+                    }
+                }
+            }
+            res=max(res,dp[i]);
+        }
+        return res;
+    }
+};
+```
+
+
+
+#### 子序列（不连续）
+
+##### 最长递增子序列
+
+> 给你一个整数数组 nums ，找到其中最长严格递增子序列的长度。
+>
+>  子序列 是由数组派生而来的序列，删除（或不删除）数组中的元素而不改变其余元素的顺序。例如，[3,6,2,7] 是数组 [0,3,1,6,2,2,7] 的子序列。
+
+* `dp[i]`: i之前包括i的，以`nums[i]`结尾的最长递增子序列的长度
+* 状态转移：`dp[i]=max(dp[i], dp[j]+1)`, 其中：`nums[j]<nums[i]`且`j<i`
+* 初始化：`dp[i]=1`
+
+```cpp
+class Solution_18 {
+public:
+    int lengthOfLIS(vector<int>& nums) {
+        if(nums.size()<=1) return nums.size();
+        vector<int>dp(nums.size(),1);
+        int res=0;
+        for(int i=1;i<nums.size();i++){
+            for(int j=0;j<i;j++){
+                if(nums[j]<nums[i]) dp[i]=max(dp[i],dp[j]+1);
+            }
+            if(dp[i]>res) res=dp[i];
+        }
+        return res;
+    }
+};
+```
+
+
+
+#### 编辑距离
+
+
+
+#### 回文
+
+```c++
+void computePalindrome(const string& s) {
+    // isPalindrome[i][j] 代表 s[i:j](双边包括)是否是回文字串 
+    isPalindrome.resize(s.size(), vector<bool>(s.size(), false)); // 根据字符串s, 刷新布尔矩阵的大小
+    for (int i = s.size() - 1; i >= 0; i--) { 
+        // 需要倒序计算, 保证在i行时, i+1行已经计算好了
+        for (int j = i; j < s.size(); j++) {
+            if (j == i) {isPalindrome[i][j] = true;}
+            else if (j - i == 1) {isPalindrome[i][j] = (s[i] == s[j]);}
+            else {isPalindrome[i][j] = (s[i] == s[j] && isPalindrome[i+1][j-1]);}
+        }
+    }
+}
+```
+
+
+
+
 
 ## 单调栈
+
 ### 1. 适用场景
 * 一维数组，要寻找任一个元素的右边或者左边，第一个比自己大或者小的元素的位置。
 ### 2. 思想
