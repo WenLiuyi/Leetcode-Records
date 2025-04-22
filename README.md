@@ -2878,6 +2878,43 @@ int maxProduct(vector<int>& nums) {
 }
 ```
 
+##### 最长重复子数组
+
+> 给两个整数数组 `nums1` 和 `nums2` ，返回 *两个数组中 **公共的** 、长度最长的子数组的长度* 。（子数组连续）
+
+* 动态规划（二维数组）：
+  * `dp[i]`：以`nums[i]`结尾的nums1，和以`nums[j]`结尾的nums2，最长重复子数组长度为`dp[i][j]`.
+
+```c++
+class Solution_22_1 {
+public:
+    int findLength(vector<int>& nums1, vector<int>& nums2) {
+        vector<vector<int>>dp(nums1.size()+1, vector<int>(nums2.size()+1,0));
+        int res=0;
+        
+        // 初始化: 第一行，第一列
+        for(int j=0;j<nums2.size();j++){
+            if(nums1[0]==nums2[j]) dp[0][j]=1;
+        }
+        for(int i=0;i<nums1.size();i++){
+            if(nums1[i]==nums2[0]) dp[i][0]=1;
+        }
+        // 状态转移: dp[i][j]=dp[i-1][j-1]+1; (nums1[i]==nums2[j])
+        for(int i=0;i<nums1.size();i++){
+            for(int j=0;j<nums2.size();j++){
+                if(nums1[i]==nums2[j] && i>0 && j>0){
+                    dp[i][j]=dp[i-1][j-1]+1;
+                }
+                if(dp[i][j]>res) res=dp[i][j];
+            }
+        }
+        return res;
+    }
+};
+```
+
+
+
 ##### 最长有效括号
 
 > 给你一个只包含 '(' 和 ')' 的字符串，找出最长有效（格式正确且连续）括号子串的长度。
@@ -2922,7 +2959,7 @@ public:
 >
 >  子序列 是由数组派生而来的序列，删除（或不删除）数组中的元素而不改变其余元素的顺序。例如，[3,6,2,7] 是数组 [0,3,1,6,2,2,7] 的子序列。
 
-* `dp[i]`: i之前包括i的，以`nums[i]`结尾的最长递增子序列的长度
+* `dp[i]`: i之前包括i的，**以`nums[i]`结尾**的最长递增子序列的长度
 * 状态转移：`dp[i]=max(dp[i], dp[j]+1)`, 其中：`nums[j]<nums[i]`且`j<i`
 * 初始化：`dp[i]=1`
 
@@ -2944,6 +2981,21 @@ public:
 };
 ```
 
+##### 最长公共子序列
+
+> 给定两个字符串 text1 和 text2，返回这两个字符串的最长公共子序列的长度。
+>
+> 一个字符串的 子序列 是指这样一个新的字符串：它是由原字符串在不改变字符的相对顺序的情况下删除某些字符（也可以不删除任何字符）后组成的新字符串。
+>
+> 例如，"ace" 是 "abcde" 的子序列，但 "aec" 不是 "abcde" 的子序列。两个字符串的「公共子序列」是这两个字符串所共同拥有的子序列。
+>
+> 若这两个字符串没有公共子序列，则返回 0。
+
+* `dp[i][j]`:下标为`[0,i-1]`的text1子字符串，下标为`[0,j-1]`的text2子字符串，最长公共子序列长度
+* 状态转移：
+  * `text1[i]==text2[j]`: `dp[i][j]=dp[i-1][j-1]`
+  * `text1[i]!=text2[j]`: `dp[i][j]=max(dp[i-1][j], dp[i][j-1])`
+
 
 
 #### 编辑距离
@@ -2952,18 +3004,32 @@ public:
 
 #### 回文
 
+##### 最长回文子串
+
+* `dp[i][j]`:下标区间为`[i,j]`的子串是否是回文串
+  * 由`dp[i+1][j-1]`
+
 ```c++
-void computePalindrome(const string& s) {
-    // isPalindrome[i][j] 代表 s[i:j](双边包括)是否是回文字串 
-    isPalindrome.resize(s.size(), vector<bool>(s.size(), false)); // 根据字符串s, 刷新布尔矩阵的大小
-    for (int i = s.size() - 1; i >= 0; i--) { 
+string longestPalindrome(string s) {
+    int n=s.length(),res_i=0,res_j=0,resLen=1;
+    vector<vector<bool>>dp(n,vector<bool>(n,false));
+
+    for(int i=n-1;i>=0;i--){
         // 需要倒序计算, 保证在i行时, i+1行已经计算好了
-        for (int j = i; j < s.size(); j++) {
-            if (j == i) {isPalindrome[i][j] = true;}
-            else if (j - i == 1) {isPalindrome[i][j] = (s[i] == s[j]);}
-            else {isPalindrome[i][j] = (s[i] == s[j] && isPalindrome[i+1][j-1]);}
+        for(int j=i;j<n;j++){
+            if(i==j) dp[i][j]=true;
+            else if(j-i==1){
+                dp[i][j]=(s[i]==s[j]);
+            }else{
+                dp[i][j]=(s[i]==s[j] && dp[i+1][j-1]);
+            }
+            if(dp[i][j] && j-i+1>resLen){
+                resLen=j-i+1;
+                res_i=i;res_j=j;
+            }
         }
     }
+    return s.substr(res_i,resLen);
 }
 ```
 

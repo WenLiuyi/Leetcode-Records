@@ -8,6 +8,7 @@
 #include <iostream>
 #include <vector>
 #include <unordered_set>
+
 using namespace std;
 
 // 1. T509.斐波那契数列
@@ -713,14 +714,110 @@ public:
                     dp[i][j]=(s[i]==s[j]);
                 }else{
                     dp[i][j]=(s[i]==s[j] && dp[i+1][j-1]);
-                    if(dp[i][j] && j-i+1>resLen){
-                        resLen=j-i+1;
-                        res_i=i;res_j=j;
-                    }
+                }
+                if(dp[i][j] && j-i+1>resLen){
+                    resLen=j-i+1;
+                    res_i=i;res_j=j;
                 }
             }
         }
         return s.substr(res_i,resLen);
+    }
+};
+
+// 22. T718.最长重复子数组
+// dp[i][j]:以nums1[i], num2[j]结尾的重复子数组最大长度
+// 法一：二维数组
+// 时间复杂度：O(mn)；空间复杂度：O(mn)
+class Solution_22_1 {
+public:
+    int findLength(vector<int>& nums1, vector<int>& nums2) {
+        vector<vector<int>>dp(nums1.size()+1, vector<int>(nums2.size()+1,0));
+        int res=0;
+        
+        // 初始化: 第一行，第一列
+        for(int j=0;j<nums2.size();j++){
+            if(nums1[0]==nums2[j]) dp[0][j]=1;
+        }
+        for(int i=0;i<nums1.size();i++){
+            if(nums1[i]==nums2[0]) dp[i][0]=1;
+        }
+        // 状态转移: dp[i][j]=dp[i-1][j-1]+1; (nums1[i]==nums2[j])
+        for(int i=0;i<nums1.size();i++){
+            for(int j=0;j<nums2.size();j++){
+                if(nums1[i]==nums2[j] && i>0 && j>0){
+                    dp[i][j]=dp[i-1][j-1]+1;
+                }
+                if(dp[i][j]>res) res=dp[i][j];
+            }
+        }
+        return res;
+    }
+};
+
+// 法二：一维数组
+// 将上一层的dp[i-1][j]拷贝至：dp[i][j]
+// dp[j]:以nums2[j-1]结尾的重复子数组的最大长度
+// 空间复杂度：O(n)
+class Solution_22_2 {
+public:
+    int findLength(vector<int>& nums1, vector<int>& nums2) {
+        vector<int>dp(nums2.size()+1,0);
+        int res=0;
+        // 状态转移：
+        for(int i=1;i<=nums1.size();i++){
+            for(int j=nums2.size();j>0;j--){  // 倒序遍历，避免重复覆盖
+                if(nums1[i-1]==nums2[j-1] && j>0){
+                    dp[j]=dp[j-1]+1;
+                }else{
+                    dp[j]=0;
+                }
+                if(dp[j]>res) res=dp[j];
+            }
+        }
+        return res;
+    }
+};
+
+// 23. T1143.最长公共子序列
+/* 给定两个字符串 text1 和 text2，返回这两个字符串的最长 公共子序列 的长度。如果不存在 公共子序列 ，返回 0 。
+ 一个字符串的 子序列 是指这样一个新的字符串：
+ 它是由原字符串在不改变字符的相对顺序的情况下删除某些字符（也可以不删除任何字符）后组成的新字符串。
+
+ 例如，"ace" 是 "abcde" 的子序列，但 "aec" 不是 "abcde" 的子序列。
+ 两个字符串的 公共子序列 是这两个字符串所共同拥有的子序列。*/
+
+// dp[i][j]:下标为[0,i-1]的text1子字符串，下标为[0,j-1]的text2子字符串，最长公共子序列长度
+// 状态转移：
+// 1. text1[i]==text2[j]: dp[i][j]=dp[i-1][j-1]
+// 2. text1[i]!=text2[j]: dp[i][j]=max(dp[i-1][j], dp[i][j-1])
+// 时间复杂度：O(mn)；空间复杂度：O(mn)
+class Solution_23 {
+public:
+    int longestCommonSubsequence(string text1, string text2) {
+        vector<vector<int>>dp(text1.size()+1, vector<int>(text2.size()+1,0));
+        for(int i=1;i<=text1.size();i++){
+            for(int j=1;j<=text2.size();j++){
+                if(text1[i-1]==text2[j-1]){
+                    dp[i][j]=dp[i-1][j-1]+1;
+                }else{
+                    dp[i][j]=max(dp[i-1][j],dp[i][j-1]);
+                }
+            }
+        }
+        return dp[text1.size()][text2.size()];
+    }
+};
+
+// 24. T72.编辑距离
+/* 给你两个单词 word1 和 word2， 请返回将 word1 转换成 word2 所使用的最少操作数  。
+ 你可以对一个单词进行如下三种操作：
+ 插入一个字符；删除一个字符；替换一个字符 */
+// dp[i][j]: 以下标i-1结尾的word1，以下标j-1结尾的word2
+class Solution_24 {
+public:
+    int minDistance(string word1, string word2) {
+        
     }
 };
 
