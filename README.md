@@ -1,4 +1,27 @@
 # Leetcode-C++
+
+## 一些额外操作
+
+### 读取/写入文件
+
+```c++
+#include <iostream>
+#include <fstream>
+#include <string>
+int main(){
+  std::ifstream file("example.txt");
+  std::string line;
+  
+  if(file.is_open()){
+    while(getline(file, line)){		// 逐行读取文件
+      std::cout<<line<<std::endl;
+    }
+  }
+}
+```
+
+
+
 ## STL数据结构
 ### 1. 优先队列(priority_queue)
 * **容器适配器**：对外接口只是从队头取元素，从队尾添加元素，再无其他取元素的方式。
@@ -92,7 +115,7 @@ priority_queue<int, vector<int>, decltype(cmp)> customHeap(cmp);
 * 最坏时间复杂度：O(n^2)（当每次选择的基准元素都是最大或最小值时）
 * 空间复杂度：O(logn)（递归调用栈的深度）
 #### 1.3 实现
-##### 1.3.1 递归实现
+##### 1.3.1 递归实现：Wiki写法
 ```C
 // 1. 快速排序（递归）
 template<typename T>
@@ -115,7 +138,42 @@ void quickSort(T A[],int left, int right) {
     if (i < right) quickSort(A,i, right);
 }
 ```
+##### 1.3.2 递归实现：我的写法
+
+```c++
+class Solution_4{
+public:
+    int partition(vector<int>&nums, int left, int right){
+        int pivotIndex=left+rand()%(right-left+1);
+        swap(nums[pivotIndex],nums[right]);     // 基准元素移至最右侧
+        int pivot=nums[right];
+        
+        int i=left;     // 指向小于等于pivot的最后一个元素，下一个位置
+        for(int j=left;j<right;j++){
+            if(nums[j]<=pivot){
+                swap(nums[i],nums[j]);
+                i++;
+            }
+        }
+        swap(nums[i],nums[right]);      // 将pivot还原到位置i
+        return i;
+    }
+    void quickSort(vector<int>&nums, int left, int right){
+        if(left>=right) return;
+        int pivot=partition(nums,left,right);
+        quickSort(nums,left,pivot-1);
+        quickSort(nums,pivot+1,right);
+    }
+    /*int findKthLargest(vector<int>&nums, int k){
+        
+    }*/
+};
+```
+
+
+
 #### 1.4 优化
+
 ##### 1.4.1 随机选择基准元素
 朴素快排的缺陷：
 1. **基准元素选择不当**：比如快排一个有序序列1234567，首先划分1和右区间234567接着划分2和右区间34567，以此类推，直到划分到n层，在做数组划分的时候会遍历整个数组一遍，此时时间复杂度就是O(N)级别；
@@ -827,7 +885,7 @@ public:
 | std::multiset      | 红黑树   | 有序     | 是               | 否           | O(log n) | O(log n) |
 | std::unordered_set | 哈希表   | 无序     | 否               | 否           | O(1)     | O(1)     |
 
-* std::unordered_map 底层实现为哈希表，std::map 和std::multimap 的底层实现是红黑树。同理，std::map 和std::multimap 的key也是有序的。
+* `std::unordered_map` 底层实现为哈希表，`std::map` 和`std::multimap` 的底层实现是红黑树。同理，`std::map` 和`std::multimap` 的key也是有序的。
 
 | 映射                | 底层实现 | 是否有序   | 数值是否可以重复 | 能否更改数值 | 查询效率 | 增删效率 |
 |---------------------|----------|------------|------------------|--------------|----------|----------|
@@ -835,7 +893,14 @@ public:
 | std::multimap      | 红黑树   | key 有序   | key 可重复       | key 不可修改 | O(log n) | O(log n) |
 | std::unordered_map | 哈希表   | key 无序   | key 不可重复     | key 不可修改 | O(1)     | O(1)     |
 
+##### unordered_set
+
+* 添加元素：`insert`；移除元素：`remove`；判断是否包含该元素：`contains`
+
+
+
 #### 1.1 常见的三种哈希结构
+
 1. 数组（数组大小已知时使用，如字母异位词；不适用于哈希值少、特别分散、跨度很大的题目）
 2. set（集合）
 > 直接使用set，占用空间比数组大，而且速度要比数组慢，set将数值映射到key上的步骤需要做hash计算。
@@ -986,7 +1051,7 @@ public:
 > 三数之和的双指针解法是一层for循环num[i]为确定值，然后循环内有left和right下标作为双指针，找到nums[i] + nums[left] + nums[right] == 0。
 > 四数之和的双指针解法是两层for循环nums[k] + nums[i]为确定值，依然是循环内有left和right下标作为双指针，找出nums[k] + nums[i] + nums[left] + nums[right] == target的情况，三数之和的时间复杂度是O(n^2)，四数之和的时间复杂度是O(n^3) 。
 
-* std::unordered_set底层实现为哈希表，std::set 和std::multiset 的底层实现是红黑树。红黑树是一种平衡二叉搜索树，所以key值是有序的，但key不可以修改，改动key值会导致整棵树的错乱，所以只能删除和增加。
+* `std::unordered_set`底层实现为哈希表，`std::set` 和`std::multiset` 的底层实现是红黑树。红黑树是一种平衡二叉搜索树，所以key值是有序的，但key不可以修改，改动key值会导致整棵树的错乱，所以只能删除和增加。
 
 ## 字符串
 
@@ -1090,7 +1155,7 @@ public:
 // 时间复杂度：建堆的时间代价是 O(n)，删除的总代价是 O(klogn)；总时间复杂度O(n*logn)
 class Solution_1_2{
 public:
-    void maxHeapify(vector<int>&a, int i, int heapSize){    
+    void maxHeapify(vector<int>&a, int i, int heapSize){	// i的左右子树都是大根    
         int l=i*2+1,r=i*2+2,largest=i;
         if(l<heapSize && a[l]>a[largest]){
             largest=l;
@@ -1307,7 +1372,7 @@ public:
 1. 方法一：就是要处理的节点放入栈之后，紧接着放入一个空指针作为标记。 这种方法可以叫做空指针标记法。
 2. 方法二：加一个 boolean 值跟随每个节点，false (默认值) 表示需要为该节点和它的左右儿子安排在栈中的位次，true 表示该节点的位次之前已经安排过了，可以收割节点了。 这种方法可以叫做boolean 标记法，样例代码见下文C++ 和 Python 的 boolean 标记法。 这种方法更容易理解，在面试中更容易写出来。
 
-#
+
 ```C
 // 前序遍历：中-左-右；加入栈的顺序：右-左-中
 // 空指针标记法
@@ -3130,5 +3195,116 @@ public:
 * 从栈头到栈顶：递减
 
 ## 图
+
+### Huffman编码
+
+**最优前缀编码**
+
+1. **统计频率**：统计待编码数据中各字符的出现频率
+2. **创建节点**：为每个字符创建带权值的叶子节点
+3. **构建树**：
+   - 每次选择权值最小的两个节点合并
+   - 合并后的新节点权值为两者之和
+   - 重复直到只剩一个根节点
+4. **分配编码**：
+   - 左分支标记为0，右分支标记为1
+   - 从根到叶子的路径即为该字符的Huffman编码
+
+* 时间复杂度：`O(n*logn)`
+
+```c++
+#include <iostream>
+#include <queue>
+#include <unordered_map>
+#include <vector>
+
+using namespace std;
+
+// 定义Huffman树节点
+struct Node {
+    char ch;
+    int freq;
+    Node *left, *right;
+    Node(char c, int f) : ch(c), freq(f), left(nullptr), right(nullptr) {}
+};
+
+// 比较函数，用于优先队列
+struct compare {
+    bool operator()(Node* l, Node* r) {
+        return l->freq > r->freq;
+    }
+};
+
+// 构建Huffman树
+Node* buildHuffmanTree(const unordered_map<char, int>& freqMap) {
+    priority_queue<Node*, vector<Node*>, compare> pq;
+    
+    // 创建叶子节点并加入优先队列
+    for (auto& pair : freqMap) {
+        pq.push(new Node(pair.first, pair.second));
+    }
+    
+    // 构建Huffman树
+    while (pq.size() != 1) {
+        Node* left = pq.top(); pq.pop();
+        Node* right = pq.top(); pq.pop();
+        
+        Node* newNode = new Node('\0', left->freq + right->freq);
+        newNode->left = left;
+        newNode->right = right;
+        pq.push(newNode);
+    }
+    
+    return pq.top();
+}
+
+// 生成Huffman编码表
+void generateCodes(Node* root, string code, unordered_map<char, string>& huffmanCode) {
+    if (!root) return;
+    
+    if (!root->left && !root->right) {
+        huffmanCode[root->ch] = code;
+    }
+    
+    generateCodes(root->left, code + "0", huffmanCode);
+    generateCodes(root->right, code + "1", huffmanCode);
+}
+
+// Huffman编码主函数
+unordered_map<char, string> huffmanEncode(const string& text) {
+    // 统计字符频率
+    unordered_map<char, int> freqMap;
+    for (char ch : text) {
+        freqMap[ch]++;
+    }
+    
+    // 构建Huffman树
+    Node* root = buildHuffmanTree(freqMap);
+    
+    // 生成编码表
+    unordered_map<char, string> huffmanCode;
+    generateCodes(root, "", huffmanCode);
+    
+    return huffmanCode;
+}
+
+int main() {
+    string text = "ABRACADABRA";
+    
+    auto huffmanCode = huffmanEncode(text);
+    
+    cout << "Huffman Codes:\n";
+    for (auto& pair : huffmanCode) {
+        cout << pair.first << " : " << pair.second << endl;
+    }
+    
+    return 0;
+}
+```
+
+
+
+
+
 ## 数学
 ### 1. 位运算
