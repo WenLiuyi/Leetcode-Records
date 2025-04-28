@@ -9,6 +9,7 @@
 #include <cstring>
 #include <unordered_set>
 #include <queue>
+#include <stack>
 using namespace std;
 
 // 1. 无重复字符的最长子串（连续非空序列）
@@ -345,6 +346,192 @@ public:
     }
 };
 
+// 9. T94.二叉树的中序遍历
+// 加入栈的顺序：右-中-左
+class Solution_9{
+public:
+    vector<int> inorderTraversal(TreeNode* root){
+        vector<int>res;
+        if(root==nullptr) return res;
+        stack<TreeNode *>stk;
+        stk.push(root);
+        
+        while(!stk.empty()){
+            TreeNode *node=stk.top();
+            if(node!=nullptr){
+                stk.pop();
+                if(node->right) stk.push(node->right);  // 右节点
+                stk.push(node);stk.push(nullptr);       // 当前节点
+                if(node->left) stk.push(node->left);    // 左节点
+            }else{
+                stk.pop();
+                node=stk.top();stk.pop();
+                res.push_back(node->val);
+            }
+        }
+        return res;
+    }
+};
+
+// 10. T236.二叉树的最近公共祖先
+// 后序遍历：左-右-中
+class Solution_10 {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        if(root==p||root==q||root==nullptr) return root;
+        TreeNode *left=lowestCommonAncestor(root->left,p,q);
+        TreeNode *right=lowestCommonAncestor(root->right,p,q);
+        
+        if(left!=nullptr&&right!=nullptr) return root;
+        else if(left!=nullptr) return left;
+        else if(right!=nullptr) return right;
+        else return nullptr;
+    }
+};
+
+// 11. T46.全排列
+class Solution_11 {
+private:
+    vector<vector<int>>res;
+    vector<int>path;
+    void backTrack(vector<int>&nums,vector<bool>&used){
+        if(path.size()==nums.size()){   // 终止条件
+            res.push_back(path);
+            return;
+        }
+        for(int i=0;i<nums.size();i++){
+            if(used[i]==true) continue;
+            used[i]=true;
+            path.push_back(nums[i]);
+            backTrack(nums, used);
+            path.pop_back();
+            used[i]=false;
+        }
+    }
+public:
+    vector<vector<int>>permute(vector<int>&nums){
+        vector<bool>used(nums.size(),false);
+        backTrack(nums, used);
+        return res;
+    }
+};
+
+// 12. T912.排序数组：手撕快排
+// 法一：有大量重复元素时，TLE
+class Solution_12_1{
+public:
+    int partition(vector<int>&nums, int left, int right){
+        int pivotIndex=left+rand()%(right-left+1);
+        swap(nums[pivotIndex],nums[right]);     // 移到最右侧
+        int pivot=nums[right];
+        
+        int i=left;
+        for(int j=left;j<right;j++){
+            if(nums[j]<=pivot){
+                swap(nums[i],nums[j]);
+                i++;
+            }
+        }
+        swap(nums[i],nums[right]);
+        return i;
+    }
+    
+    void quickSort(vector<int>&nums, int left, int right){
+        if(left>=right) return;
+        int pivot=partition(nums, left, right);
+        quickSort(nums, left, pivot-1);
+        quickSort(nums, pivot+1, right);
+    }
+    
+    vector<int>sortArray(vector<int>&nums){
+        quickSort(nums, 0, nums.size()-1);
+        vector<int>res;
+        for(int i=0;i<nums.size();i++){
+            res.push_back(nums[i]);
+        }
+        return res;
+    }
+};
+
+// 法二：
+class Solution_12_2{
+public:
+    void quickSort(vector<int>&nums, int left, int right){
+        if(left>=right) return;
+        int pivotIndex=left+rand()%(right-left+1);
+        swap(nums[right],nums[pivotIndex]);     // 将基准元素移至最右侧
+        int pivot=nums[right],i=left,j=right;
+        
+        while(i<=j){
+            while(nums[i]<pivot) i++;
+            while(nums[j]>pivot) j--;
+            if(i<=j){
+                swap(nums[i++],nums[j--]);
+            }
+        }
+        if(left<j) quickSort(nums, left, j);
+        if(i<right) quickSort(nums, i, right);
+    }
+    
+    vector<int>sortArray(vector<int>&nums){
+        quickSort(nums, 0, nums.size()-1);
+        vector<int>res;
+        for(int i=0;i<nums.size();i++){
+            res.push_back(nums[i]);
+        }
+        return res;
+    }
+};
+
+// 13. T93.复原IP地址
+class Solution_13 {
+private:
+    vector<string>res;
+    void backTrack(string &s, int startIndex, int pointerNum){
+        if(pointerNum==3){      // 终止条件
+            if(isValid(s, startIndex, s.size()-1)){
+                res.push_back(s);
+            }
+            return;
+        }
+        for(int i=startIndex;i<s.size();i++){
+            if(isValid(s, startIndex, i)){
+                s.insert(s.begin()+i+1,'.');
+                pointerNum++;
+                backTrack(s, i+2, pointerNum);
+                pointerNum--;
+                s.erase(s.begin()+i+1);
+            }else{
+                break;
+            }
+        }
+    }
+    bool isValid(string &s, int start, int end){
+        if(start>end) return false;
+        if(s[start]=='0' && start!=end){
+            return false;
+        }
+        int num=0;
+        for(int i=start;i<=end;i++){
+            if(s[i]<'0' || s[i]>'9'){
+                return false;
+            }
+            num=num*10+(s[i]-'0');
+            if(num>255) return false;
+        }
+        return true;
+    }
+    
+public:
+    vector<string> restoreIpAddresses(string s) {
+        res.clear();
+        if(s.size()<4||s.size()>12) return res;
+        backTrack(s, 0, 0);
+        return res;
+    }
+};
+
+//
 
 int main(int argc, const char * argv[]) {
     

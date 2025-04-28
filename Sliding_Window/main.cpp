@@ -201,6 +201,30 @@ public:
     }
 };
 
+// 5. T438.找到字符串中所有异位词
+// 给定两个字符串 s 和 p，找到 s 中所有 p 的 异位词 的子串，返回这些子串的起始索引。不考虑答案输出的顺序。
+// 滑动窗口：在s中构造一个与p长度相同的滑动窗口，维护窗口中每个字符的数量
+class Solution_5 {
+public:
+    vector<int> findAnagrams(string s, string p) {
+        vector<int>pCount(26,0),sCount(26,0);
+        vector<int>res;
+        if(s.length()<p.length()) return res;
+        for(int i=0;i<p.length();i++){
+            pCount[p[i]-'a']++;
+        }
+        for(int l=0,r=0;r<s.size();r++){      // 外层扩展右边界
+            sCount[s[r]-'a']++;
+            if(r-l+1==p.length()){
+                if(sCount==pCount) res.push_back(l);
+                sCount[s[l]-'a']--;
+                l++;
+            }
+        }
+        return res;
+    }
+};
+
 
 int main(int argc, const char * argv[]) {
     // insert code here...

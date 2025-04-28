@@ -118,27 +118,24 @@ priority_queue<int, vector<int>, decltype(cmp)> customHeap(cmp);
 ##### 1.3.1 递归实现：Wiki写法
 ```C
 // 1. 快速排序（递归）
-template<typename T>
-void quickSort(T A[],int left, int right) {
-    int i = left, j = right;
-    int tmp;
-    int pivot = A[(left + right) / 2];
-
-    while (i <= j) {
-        while (A[i] < pivot) i++;
-        while (A[j] > pivot) j--;
-        if (i <= j) {
-            swap(A[i], A[j]);
-            i++;
-            j--;
+void quickSort(vector<int>&nums, int left, int right){
+        if(left>=right) return;
+        int pivotIndex=left+rand()%(right-left+1);
+        swap(nums[right],nums[pivotIndex]);     // 将基准元素移至最右侧
+        int pivot=nums[right],i=left,j=right;
+        
+        while(i<=j){
+            while(nums[i]<pivot) i++;
+            while(nums[j]>pivot) j--;
+            if(i<=j){
+                swap(nums[i++],nums[j--]);
+            }
         }
-    };
-
-    if (left < j) quickSort(A,left, j);
-    if (i < right) quickSort(A,i, right);
-}
+        if(left<j) quickSort(nums, left, j);
+        if(i<right) quickSort(nums, i, right);
+    }
 ```
-##### 1.3.2 递归实现：我的写法
+##### 1.3.2 递归实现：我的写法：出现大量重复元素时TLE
 
 ```c++
 class Solution_4{
@@ -568,7 +565,37 @@ for (int l = 0, r = 0 ; r < n ; r++) {  //外层循环扩展右边界
         };
         ```
 
+* 找出所有字母异位词
+
+  > 给定两个字符串 s 和 p，找到 s 中所有 p 的 异位词 的子串，返回这些子串的起始索引。不考虑答案输出的顺序。
+
+  * 在s中构造一个与p长度相同的滑动窗口，维护窗口中每个字符的数量
+
+  ```cpp
+  public:
+      vector<int> findAnagrams(string s, string p) {
+          vector<int>pCount(26,0),sCount(26,0);
+          vector<int>res;
+          if(s.length()<p.length()) return res;
+          for(int i=0;i<p.length();i++){
+              pCount[p[i]-'a']++;
+          }
+          for(int l=0,r=0;r<s.size();r++){      // 外层扩展右边界
+              sCount[s[r]-'a']++;
+              if(r-l+1==p.length()){
+                  if(sCount==pCount) res.push_back(l);
+                  sCount[s[l]-'a']--;
+                  l++;
+              }
+          }
+          return res;
+      }
+  ```
+
+  
+
 ### 4. 前缀和数组
+
 * sums[i] 表示：从 nums[0] 到 nums[i−1] 的元素和
 ```C
 int n=nums.size();
@@ -1254,10 +1281,10 @@ public:
 > 参考：https://cloud.tencent.com/developer/article/1879082
 ###### 特征
 1. 节点是红色/黑色；
-2. 根节点是黑色；
-3. 所有叶子节点都是黑色；
+2. **根节点是黑色**；
+3. **所有叶子节点都是黑色**；
 4. 每个红色节点：必须有两个黑色的子节点。（从每个叶子到根的所有路径上不能有两个连续的红色节点。）（新增节点的父节点必须相同）
-5. 从任一节点，到其每个叶子的所有简单路径都包含相同数目的黑色节点。（新增节点必须为红）
+5. **从任一节点，到其每个叶子的所有简单路径都包含相同数目的黑色节点**。（新增节点必须为红）
 
 ###### 调整
 变色；左旋；右旋
@@ -1279,8 +1306,8 @@ B+ 树则将数据都保存在叶子节点，同时通过链表的形式将他�
 * 大部分文件系统、数据库系统都采用B树、B+树作为索引结构
 
 ###### 区别
-* B+树中只有叶子节点会带有指向记录的指针（ROWID），而B树则所有节点都带有，在内部节点出现的索引项不会再出现在叶子节点中。
-* B+树中所有叶子节点都是通过指针连接在一起，而B树不会。
+* **B+树中只有叶子节点会带有指向记录的指针**（ROWID），而**B树则所有节点都带有**，在内部节点出现的索引项不会再出现在叶子节点中。
+* **B+树中所有叶子节点都是通过指针连接在一起**，而B树不会。
 
 ###### B树的优点
 对于在内部节点的数据，可直接得到，不必根据叶子节点来定位。
@@ -3098,10 +3125,6 @@ string longestPalindrome(string s) {
 }
 ```
 
-
-
-
-
 ## 单调栈
 
 ### 1. 适用场景
@@ -3195,6 +3218,164 @@ public:
 * 从栈头到栈顶：递减
 
 ## 图
+
+### 1. 理论基础
+
+二维坐标中，两点可以连成线，多个点连成的线就构成了图。
+
+* 图的种类：**有向图**和**无向图**
+* 度：出度：从该节点出发的边的个数；入度：指向该节点边的个数
+* 连通性：
+  * 连通图：在**无向图**中，任何两个节点都是可以到达的，称之为连通图；
+  * 强连通图：在**有向图**中，**任何两个节点是可以相互到达的**；
+* 连通分量：无向图中的极大连通子图，称为该图的一个连通分量。
+* 强连通分量：有向图中的极大连通子图。
+
+
+
+### 2. 图的构造
+
+* **朴素存储**：存储边。假设有n条边，构造n*2的数组；
+* **邻接矩阵**：假设有n个点，申请n*n的空间。
+  * 适合稠密图；检查任意两个顶点间是否存在边的操作非常快；但稀疏图场景下，有空间浪费。
+* **邻接表**：
+  * 优点：存储稀疏图空间利用率高，只需存储边；
+  * 缺点：检查任意两个节点间是否存在边，效率低， O(V)时间，V表示某节点连接其他节点的数量。
+  * ![](20240223103713.png)
+
+### 3. 图的遍历方式
+
+#### 3.1 深度优先搜索
+
+1. 确认递归函数、参数
+
+   ```c++
+   vector<vector<int>> result; // 保存符合条件的所有路径
+   vector<int> path; // 起点到终点的路径
+   void dfs (图，目前搜索的节点)  
+   ```
+
+2. 确认终止条件
+
+   ```c++
+   if (终止条件) {
+       存放结果;
+       return;
+   }
+   ```
+
+3. 处理目前搜索节点出发的路径
+
+   ```c++
+   for (选择：本节点所连接的其他节点) {
+       处理节点;
+       dfs(图，选择的节点); // 递归
+       回溯，撤销处理结果
+   }
+   ```
+
+#### 3.2 广度优先搜索
+
+* 注意：**只要加入队列立刻标记，避免重复访问**
+
+```c++
+int dir[4][2] = {0, 1, 1, 0, -1, 0, 0, -1}; // 表示四个方向
+// grid 是地图，也就是一个二维数组
+// visited标记访问过的节点，不要重复访问
+// x,y 表示开始搜索节点的下标
+void bfs(vector<vector<char>>& grid, vector<vector<bool>>& visited, int x, int y) {
+    queue<pair<int, int>> que; // 定义队列
+    que.push({x, y}); // 起始节点加入队列
+    visited[x][y] = true; // 只要加入队列，立刻标记为访问过的节点
+    while(!que.empty()) { // 开始遍历队列里的元素
+        pair<int ,int> cur = que.front(); que.pop(); // 从队列取元素
+        int curx = cur.first;
+        int cury = cur.second; // 当前节点坐标
+        for (int i = 0; i < 4; i++) { // 开始想当前节点的四个方向左右上下去遍历
+            int nextx = curx + dir[i][0];
+            int nexty = cury + dir[i][1]; // 获取周边四个方向的坐标
+            if (nextx < 0 || nextx >= grid.size() || nexty < 0 || nexty >= grid[0].size()) continue;  // 坐标越界了，直接跳过
+            if (!visited[nextx][nexty]) { // 如果节点没被访问过
+                que.push({nextx, nexty});  // 队列添加该节点为下一轮要遍历的节点
+                visited[nextx][nexty] = true; // 只要加入队列立刻标记，避免重复访问
+            }
+        }
+    }
+}
+```
+
+
+
+### 4. 经典问题
+
+#### 4.1 所有可达路径
+
+> 给你一个有 n 个节点的 有向无环图（DAG），请你找出所有从节点 0 到节点 n-1 的路径并输出（不要求按特定顺序）
+>
+> graph[i] 是一个从节点 i 可以访问的所有节点的列表（即从节点 i 到节点 graph[i][j]存在一条有向边）。
+
+* 时间复杂度：O(n*2^n)，可以找到一种最坏情况，即每一个点都可以去往编号比它大的点。此时路径数为 O(2^n)，且每条路径长度为 O(n)
+* 空间复杂度：O(n)
+
+```c++
+vector<vector<int>>res;
+  vector<int>path;
+
+  void dfs(vector<vector<int>>& graph, int x, int n){
+      if(x==n-1){
+          res.push_back(path);
+          return;
+      }
+      for(auto const &node:graph[x]){
+          path.push_back(node);
+          dfs(graph,node,n);
+          path.pop_back();
+      }
+  }
+```
+
+#### 4.2 岛屿数量
+
+##### DFS版
+
+```c++
+class Solution_2_1{
+private:
+    int dir[4][2]={0,1,0,-1,1,0,-1,0};
+    void dfs(const vector<vector<char>>&grid, vector<vector<bool>>&visited, int x, int y){
+        // (x,y)为当前位置坐标
+        if(visited[x][y] || grid[x][y]=='0'){     // 终止条件：当前位置已访问/不是陆地
+            return;
+        }
+        visited[x][y]=true;
+        for(int i=0;i<4;i++){
+            int nextX=x+dir[i][0];
+            int nextY=y+dir[i][1];
+            if(nextX<0||nextX>=grid.size()||nextY<0||nextY>=grid[0].size()){
+                continue;   // 越界跳过
+            }
+            dfs(grid,visited,nextX,nextY);
+        }
+    }
+    
+public:
+    int numIslands(vector<vector<char>>&grid){
+        int m=grid.size(),n=grid[0].size();
+        int res=0;
+        vector<vector<bool>>visited(m,vector<bool>(n,false));
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                if(!visited[i][j] && grid[i][j]=='1'){
+                    res++;
+                    dfs(grid,visited,i,j);
+                }
+            }
+        }
+        return res;
+    }
+};
+```
+
 
 ### Huffman编码
 
