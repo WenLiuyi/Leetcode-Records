@@ -508,6 +508,58 @@ public:
     }
 };
 
+// 15. T68.文本左右对齐
+/* 给定一个单词数组 words 和一个长度 maxWidth ，重新排版单词，使其成为每行恰好有 maxWidth 个字符，且左右两端对齐的文本。
+ 你应该使用 “贪心算法” 来放置给定的单词；也就是说，尽可能多地往每行中放置单词。必要时可用空格 ' ' 填充，使得每行恰好有 maxWidth 个字符。
+ 要求尽可能均匀分配单词间的空格数量。如果某一行单词间的空格不能均匀分配，则左侧放置的空格数要多于右侧的空格数。
+ 文本的最后一行应为左对齐，且单词之间不插入额外的空格。 */
+
+// 时间复杂度：O(m)；空间复杂度：O(m)，m为数组words中所有字符串长度之和
+class Solution_15{
+private:
+    string join(vector<string>&words, int left, int right, string sep){
+        // 返回用 sep 拼接 [left, right) 范围内的 words 组成的字符串
+        string s=words[left];
+        for(int i=left+1;i<right;i++){
+            s+=sep+words[i];
+        }
+        return s;
+    }
+    string blank(int n){    // 返回长度为 n 的由空格组成的字符串
+        return string(n,' ');
+    }
+public:
+    vector<string>fullJustify(vector<string>&words, int maxWidth){
+        vector<string>res;
+        int right=0,n=words.size();     // 当前行的单词下标为[left,right)
+        while(true){
+            int left=right;
+            int sumLen=0;
+            // 判断当前行最多可以放几个单词（单词之间，至少一个空格）
+            while(right<n && sumLen+words[right].length()+right-left<=maxWidth){
+                sumLen+=words[right++].length();
+            }
+            // 1. 当前行是最后一行
+            if(right==n){
+                string s=join(words,left,n," ");    // 在数组words的[left,n)元素中，插入" "
+                res.emplace_back(s+blank(maxWidth-s.length()));
+                return res;
+            }
+            // 2. 当前行只有一个单词
+            if(right-left==1){
+                res.emplace_back(words[left]+blank(maxWidth-sumLen));
+                continue;
+            }
+            // 3. 当前行有多个单词
+            int avgSpaces=(maxWidth-sumLen)/(right-left-1);
+            int extraSpaces=(maxWidth-sumLen)%(right-left-1);
+            string s1=join(words,left,left+extraSpaces+1,blank(avgSpaces+1));// 拼接额外加一个空格的单词
+            string s2=join(words,left+extraSpaces+1,right,blank(avgSpaces));  // 拼接其余单词
+            res.emplace_back(s1+blank(avgSpaces)+s2);
+        }
+    }
+};
+
 int main(int argc, const char * argv[]) {
     // insert code here...
     std::cout << "Hello, World!\n";
