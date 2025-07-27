@@ -261,6 +261,35 @@ public:
     }
 };
 
+// 10. T128. 最长连续序列:
+/* 给定一个未排序的整数数组 nums ，找出数字连续的最长序列（不要求序列元素在原数组中连续）的长度。
+ 请你设计并实现时间复杂度为 O(n) 的算法解决此问题。
+ */
+// 思路：先使用hashSet去重；逐个遍历hashSet中的元素num，如果num-1在hashSet中，说明已经统计过（去重）；否则从num开始，依次判断num+1, ..., num+k是否存在
+// 时间复杂度：O(n)；空间复杂度：O(n)
+class Solution_10{
+public:
+    int longestConsecutive(vector<int>&nums){
+        unordered_set<int>numSet;
+        for(int i=0;i<nums.size();i++){
+            numSet.insert(nums[i]);
+        }
+        int longestStreak=0;
+        for(const int &num:numSet){
+            if(!numSet.count(num-1)){
+                int curNum=num;
+                int curStreak=1;
+                while(numSet.count(curNum+1)){
+                    curNum++;
+                    curStreak++;
+                }
+                longestStreak=max(longestStreak, curStreak);
+            }
+        }
+        return longestStreak;
+    }
+};
+
 int main(int argc, const char * argv[]) {
     // insert code here...
     std::cout << "Hello, World!\n";

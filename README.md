@@ -971,7 +971,7 @@ public:
 
 ##### unordered_set
 
-* 添加元素：`insert`；移除元素：`remove`；判断是否包含该元素：`contains`
+* 添加元素：`insert`；移除元素：`remove`；判断是否包含该元素：`contains`/`count`
 
 
 
@@ -1032,7 +1032,7 @@ public:
     ```
 #### 1.2 hash表冲突解决方案
 ##### 1.2.1 开放寻址法
-* 从发生冲突的那个单元起，按照一定的次序，从哈希表中找到一个下一个空闲的单元。然后把发生冲突的元素存入到该单元的一种方法。
+* 从发生冲突的那个单元起，**按照一定的次序，从哈希表中找到一个下一个空闲的单元**。然后把发生冲突的元素存入到该单元的一种方法。
 * 优点：
     * 缓存友好：由于所有数据都存储在同一个**数组**中，开放寻址法通常具有更好的缓存局部性，访问速度较快。
     * 内存效率高：不需要额外的指针存储，内存使用更紧凑。
@@ -1128,6 +1128,43 @@ public:
 > 四数之和的双指针解法是两层for循环nums[k] + nums[i]为确定值，依然是循环内有left和right下标作为双指针，找出nums[k] + nums[i] + nums[left] + nums[right] == target的情况，三数之和的时间复杂度是O(n^2)，四数之和的时间复杂度是O(n^3) 。
 
 * `std::unordered_set`底层实现为哈希表，`std::set` 和`std::multiset` 的底层实现是红黑树。红黑树是一种平衡二叉搜索树，所以key值是有序的，但key不可以修改，改动key值会导致整棵树的错乱，所以只能删除和增加。
+
+#### 2.3 最长连续序列
+
+> 给定一个未排序的整数数组 nums ，找出数字连续的最长序列（不要求序列元素在原数组中连续）的长度。
+>
+>  请你设计并实现时间复杂度为 O(n) 的算法解决此问题。
+
+思路：先使用hashSet去重；逐个遍历hashSet中的元素num，如果num-1在hashSet中，说明已经统计过（去重）；否则从num开始，依次判断num+1, ..., num+k是否存在
+
+* 时间复杂度：O(n)；空间复杂度：O(n)
+
+``` c++
+class Solution_10{
+public:
+    int longestConsecutive(vector<int>&nums){
+        unordered_set<int>numSet;
+        for(int i=0;i<nums.size();i++){
+            numSet.insert(nums[i]);
+        }
+        int longestStreak=0;
+        for(const int &num:numSet){
+            if(!numSet.count(num-1)){
+                int curNum=num;
+                int curStreak=1;
+                while(numSet.count(curNum+1)){
+                    curNum++;
+                    curStreak++;
+                }
+                longestStreak=max(longestStreak, curStreak);
+            }
+        }
+        return longestStreak;
+    }
+};
+```
+
+
 
 ## 字符串
 
