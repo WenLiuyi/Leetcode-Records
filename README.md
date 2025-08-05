@@ -360,15 +360,15 @@ public:
 /* 三种情况：
  1. target 在数组范围的右边或者左边，例如数组{3, 4, 5}，target为2或者数组{3, 4, 5},target为6，此时应该返回[-1, -1];
  2. target 在数组范围中，且数组中不存在target，例如数组{3,6,7},target为5，此时应该返回[-1, -1];
- 3. target 在数组范围中，且数组中存在target，例如数组{3,6,7},target为6，此时应该返回[-1, -1].
+ 3. target 在数组范围中，且数组中存在target，例如数组{3,6,7},target为6，此时应该返回[1, 1].
  */
-int getLeftBorder(vector<int>&nums,int target){     // 寻找左边界:不包含target的左边界
+int getLeftBorder(vector<int>&nums,int target){     // 寻找左边界:不包含target的左边界，即：小于target的最大数
         int left=0,right=nums.size()-1;
         int leftBorder=-2;
         while(left<=right){
             int mid=left+((right-left)>>1);
             if(nums[mid]>=target){  // 此时nums[mid-1]<=target，设为新的左边界
-                right=mid-1;leftBorder=right;
+                right=mid-1;leftBorder=right;	// 排除大于等于target的范围
             }else{
                 left=mid+1;
             }
@@ -469,6 +469,8 @@ public:
 >
 >  你必须设计一个时间复杂度为 O(log n) 的算法解决此问题。 
 
+![fig1](https://assets.leetcode-cn.com/solution-static/33/33_fig1.png)
+
 * 有两端非递减区间，运用二分查找
 
 ```c++
@@ -477,22 +479,21 @@ public:
     int search(vector<int>& nums, int target) {
         int n=nums.size();
         if(n==0) return -1;
-        else if(n==1){
-            return (nums[0]==target)?0:-1;
-        }
-        int left=0,right=n-1;
+        else if(n==1) return nums[0]==target?0:-1;
+        int left=0, right=n-1;
         while(left<=right){
-            int mid=left+(right-left)/2;
-            if(nums[mid]==target) return mid;
-            else if(nums[0]<=nums[mid]){ // [0,mid]为升序数组
+            int mid=left+((right-left)>>1);
+            if(nums[mid]==target){
+                return mid;
+            }else if(nums[0]<=nums[mid]){    // nums[0...mid]为递增区间
                 if(nums[0]<=target && target<nums[mid]){
-                    right=mid-1;
-                }else{
+                    right=mid-1;        // 对应：target<nums[mid]
+                }else{                      // nums[mid, n-1]为递增区间
                     left=mid+1;
                 }
             }else{
                 if(nums[mid]<target && target<=nums[n-1]){
-                    left=mid+1;
+                    left=mid+1;         // 对应：nums[mid]<target
                 }else{
                     right=mid-1;
                 }
@@ -503,7 +504,22 @@ public:
 };
 ```
 
+#### 2.6 寻找旋转排序数组中的最小值
 
+> 已知一个长度为 `n` 的数组，预先按照升序排列，经由 `1` 到 `n` 次 **旋转** 后，得到输入数组。例如，原数组 `nums = [0,1,2,4,5,6,7]` 在变化后可能得到：
+>
+> - 若旋转 `4` 次，则可以得到 `[4,5,6,7,0,1,2]`
+> - 若旋转 `7` 次，则可以得到 `[0,1,2,4,5,6,7]`
+>
+> 注意，数组 `[a[0], a[1], a[2], ..., a[n-1]]` **旋转一次** 的结果为数组 `[a[n-1], a[0], a[1], a[2], ..., a[n-2]]` 。
+>
+> 给你一个元素值 **互不相同** 的数组 `nums` ，它原来是一个升序排列的数组，并按上述情形进行了多次旋转。请你找出并返回数组中的 **最小元素** 。
+>
+> 你必须设计一个时间复杂度为 `O(log n)` 的算法解决此问题。
+
+![fig2](https://assets.leetcode-cn.com/solution-static/153/2.png)
+
+res一定对应数组下标，因此采用`while(left<right)`，最后取等时`left==right`，答案取`nums[left]`。
 
 
 
@@ -756,7 +772,43 @@ public:
 * 合并/插入区间：按照区间左端点升序排序
 * 引爆气球：按照区间右端点升序排序（寻找当前可引爆的所有区间中，右边界的最小值）
 
+## 矩阵
+
+矩阵的考点集中在：
+
+* 如何优化空间复杂度：尽量使用原地算法；
+* 不重复、不遗漏地遍历。
+
+1. 矩阵置零：如果一个元素为 0 ，则将其所在行和列的所有元素都设为 0 。
+
+   * 思路：用矩阵的第一行和第一列代替方法一中的两个标记数组，以达到 O(1) 的额外空间。但这样会导致原数组的第一行和第一列被修改，无法记录它们是否原本包含 0。因此我们需要额外使用两个标记变量分别记录第一行和第一列是否原本包含 0。
+
+2. 螺旋矩阵：给你一个 m 行 n 列的矩阵 matrix ，请按照 顺时针螺旋顺序 ，返回矩阵中的所有元素。
+
+   * 思路：每一圈为一个循环；每一条边采取左闭右开
+
+3. 旋转图像：给定一个 n × n 的二维矩阵 matrix 表示一个图像。请你将图像顺时针旋转 90 度。
+
+    你必须在 原地 旋转图像，这意味着你需要直接修改输入的二维矩阵。
+
+   * 采用临时变量记录，4个元素构成一个循环：
+
+     temp=matrix[row] [col], matrix[row] [col]=matrix[n-col-1] [row], matrix[n-col-1] [row]=matrix[n-row-1] [n-col-1], matrix[n-row-1] [n-col-1]=matrix[col] [n-row-1], matrix[col] [n-row-1]=temp.
+
+4. 搜索二维矩阵II：编写一个高效的算法来搜索 m x n 矩阵 matrix 中的一个目标值 target 。该矩阵具有以下特性：每行的元素从左到右升序排列； 每列的元素从上到下升序排列。
+
+   * 思路：Z字形查找
+
+     对于[x, y]，搜寻：行[x, n-1]，列[0, y]组成的矩阵
+
+     1. matrix[x, y]==target: 找到；
+
+     2. matrix[x, y]<target: x++;(matrix[x, y]是第x行最大元素)
+
+     3. matrix[x, y]>target: y--;(matrix[x, y]是第y列最小元素)
+
 ## 链表
+
 ### 1. 理论基础
 * 链表：通过指针串联的线性结构，每一个节点由两个部分组成：**数据域**、**指针域**
 #### 1.1 链表类型
@@ -3620,7 +3672,53 @@ int main() {
 
 
 
+## 区间
+
+几个经典的区间问题：汇总区间，合并区间，插入区间，用最少数量的箭引爆气球
+
+关键点：区间的排序（合并区间：按左端点升序排序；
+
+> T452.用最少数量的箭引爆气球
+>
+> 思路：求区间的交集；射出位置，当前可引爆的所有区间中，右边界的最小值
+
+```c++
+class Solution_4 {
+public:
+    int findMinArrowShots(vector<vector<int>>& points) {
+        if(points.size()==0) return 0;
+        sort(points.begin(),points.end(),[](const vector<int>&p1,const vector<int>&p2){
+            return p1[1]<p2[1];     // 按右边界升序排序
+        });
+        int pos=points[0][1],ans=1;
+        for(const vector<int> &ballon:points){
+            if(ballon[0]>pos){      // 当前区间左端点超过pos，不能引爆：此时开一个新的引爆点
+                pos=ballon[1];
+                ans++;
+            }
+        }
+        return ans;
+    }
+};
+```
+
+
+
 
 
 ## 数学
 ### 1. 位运算
+
+#### 一个不需要临时变量的swap
+
+```cpp
+void swap(vector<int>&nums, int i, int j){
+    if(i==j) return;
+    nums[i]^=nums[j];
+    nums[j]^=nums[i];
+    nums[i]^=nums[j];
+}
+```
+
+
+
