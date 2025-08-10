@@ -11,6 +11,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <map>
+#include <set>
 using namespace std;
 
 // 1. T77.组合:给定两个整数 n 和 k，返回范围 [1, n] 中所有可能的 k 个数的组合。你可以按 任何顺序 返回答案。
@@ -666,6 +667,152 @@ private:
 public:
     void solveSudoku(vector<vector<char>>& board) {
         backTrack(board);
+    }
+};
+
+// 16. T212. 单词搜索II
+/* 给定一个 m x n 二维字符网格 board 和一个单词（字符串）列表 words， 返回所有二维网格上的单词 。
+ 单词必须按照字母顺序，通过 相邻的单元格 内的字母构成，其中“相邻”单元格是那些水平相邻或垂直相邻的单元格。同一个单元格内的字母在一个单词中不允许被重复使用。*/
+
+/* 思路：
+ 1. 与单词搜索I只找一个word相比，单词搜索II需要逐一比对所有words。每次遍历判断时间复杂度太大，改用字典树；
+ 2. 采用dfs，搜索满足条件的单元格
+ 3. 注意：同一个word可能在多个路径中出现，需要使用set去重
+ */
+struct TrieNode{
+    string word;        // 只有叶子节点才有值
+    unordered_map<char, TrieNode *>children;    // 通过哈希表记录
+    TrieNode(){
+        this->word="";
+    }
+};
+class Solution_16{
+private:
+    void insertTrieNode(TrieNode *root, const string &word){
+        TrieNode *cur=root;
+        for(const auto &ch:word){
+            if(!cur->children.contains(ch)){
+                cur->children[ch]=new TrieNode();
+            }
+            cur=cur->children[ch];
+        }
+        cur->word=word;     // 叶子节点
+    }
+    
+    vector<vector<bool>> visited;
+    set<string>res;
+    void init(int m, int n){
+        visited=vector<vector<bool>>(m, vector<bool>(n, false));
+    }
+    
+    vector<pair<int, int>>directions={{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
+    void backTrack(vector<vector<char>>& board, TrieNode *pre, int i, int j){   // 进入之前，used[i][j]已经设置为true
+        // 从board[i][j]开始遍历:到cur的当前路径是否是某个word的前缀
+        // 1. 终止条件
+        char ch=board[i][j];
+        if(!pre->children.contains(ch)){
+            return;
+        }
+        pre=pre->children[ch];      // 移动指向的节点
+        if(pre->word.size()>0){
+            res.insert(pre->word);   // 遍历到叶子节点，将当前word加入res
+            // 此处不要返回，可以再接着找（没说不同word不能共用相同的单元格）
+        }
+        // 2. 遍历，寻找下一个节点
+        for(const auto &dir:directions){
+            int nextX=i+dir.first, nextY=j+dir.second;
+            if(0<=nextX && nextX<board.size() && 0<=nextY && nextY<board[0].size()){
+                if(visited[nextX][nextY]){
+                    continue;   // 已经使用，跳过
+                }
+                visited[nextX][nextY]=true;
+                backTrack(board, pre, nextX, nextY);
+                visited[nextX][nextY]=false;
+            }
+        }
+    };
+    
+public:
+    vector<string>findWords(vector<vector<char>> &board, vector<string> &words){
+        // 1. 将words中所有单词插入Trie
+        TrieNode *root=new TrieNode();
+        for(const auto &word: words){
+            insertTrieNode(root, word);
+        }
+        int m=board.size(), n=board[0].size();
+        init(m, n);
+        
+        res.clear();
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                visited[i][j]=true;
+                backTrack(board, root, i, j);
+                visited[i][j]=false;
+            }
+        }
+        vector<string>ans;
+        for(const auto &word: res){
+            ans.push_back(word);
+        }
+        return ans;
+    }
+};
+
+// 17. T1278.分割回文串III
+/* 给你一个由小写字母组成的字符串 s，和一个整数 k。
+ 请你按下面的要求分割字符串：
+ 首先，你可以将 s 中的部分字符修改为其他的小写英文字母。
+ 接着，你需要把 s 分割成 k 个非空且不相交的子串，并且每个子串都是回文串。
+ 请返回以这种方式分割字符串所需修改的最少字符数。*/
+
+/* 思路：动态规划: f[i][j]表示将s[0,i-1]（前i个字符）分割为j个回文串，所需要的最小修改次数.
+ 状态转移: f[i][j]=min(f[t][j-1]+cost(s, t, i-1). cost(s, t, i)表示将s[t, i-1]组成的子串修改为回文串所需的最小次数
+ 优化：记cost[i][j]=cost(s, i, j)，有：
+    1. cost[i][j]=cost[i+1, j-1], if s[i]==s[j].
+    2. cost[i][j]=cost[i+1, j-1]+1, if s[i]!=s[j].
+    3. cost[i][j]=0, if i>=j.
+ */
+class Solution_17{
+private:
+    vector<vector<int>>cost;
+    int n;
+    void computeCost(const string &s){
+        n=s.size();
+        cost.resize(n, vector<int>(n, 0));
+        for(int i=n-1;i>=0;i--){
+            for(int j=i;j<n;j++){
+                if(i>=j) continue;
+                else if(s[i]==s[j]){
+                    cost[i][j]=cost[i+1][j-1];
+                }else{
+                    cost[i][j]=cost[i+1][j-1]+1;
+                }
+            }
+        }
+    }
+    
+    vector<vector<int>>f;
+    int solve(string s, int k){
+        f.resize(n+1, vector<int>(k+1, INT_MAX));
+        f[0][0]=0;
+        for(int i=1;i<=n;i++){
+            for(int j=1;j<=min(k, i);j++){
+                if(j==1){
+                    f[i][j]=cost[0][i-1];
+                    continue;
+                }
+                for(int t=j-1;t<i;t++){
+                    f[i][j]=min(f[i][j], f[t][j-1]+cost[t][i-1]);
+                }
+            }
+        }
+        return f[n][k];
+    }
+    
+public:
+    int palindromePartition(string s, int k) {
+        computeCost(s);
+        return solve(s, k);
     }
 };
 

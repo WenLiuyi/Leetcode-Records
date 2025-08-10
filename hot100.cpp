@@ -477,8 +477,278 @@ public:
     }
 };
 
+// 14. 回溯-T46.全排列
+// 时间复杂度：O(n!)；空间复杂度：O(n)
+class Solution_14{
+private:
+    vector<vector<int>> res;
+    vector<int> path;
+    
+    void backTrack(vector<int>& nums, vector<bool>& used){
+        if(path.size()==nums.size()){   // 终止条件
+            res.push_back(path);
+            return;
+        }
+        for(int i=0;i<nums.size();i++){
+            if(used[i]==true) continue;     // 已经使用：跳过
+            used[i]=true;
+            path.push_back(nums[i]);
+            backTrack(nums, used);
+            used[i]=false;      // 回溯
+            path.pop_back();
+        }
+    }
+public:
+    vector<vector<int>> permute(vector<int>& nums) {
+        res.clear();path.clear();
+        vector<bool>used(nums.size(), false);
+        backTrack(nums, used);
+        return res;
+    }
+};
+
+// 15. 回溯-T78.子集
+/* 给你一个整数数组 nums ，数组中的元素 互不相同 。返回该数组所有可能的子集（幂集）。
+ 解集 不能 包含重复的子集。你可以按 任意顺序 返回解集。*/
+// 时间复杂度：O(n*2^n)
+class Solution_15{
+private:
+    vector<vector<int>>res;
+    vector<int>path;
+    
+    void backTrack(vector<int>&nums, int startIndex){
+        res.push_back(path);
+        if(startIndex>=nums.size()){
+            return;
+        }
+        for(int i=startIndex;i<nums.size();i++){
+            path.push_back(nums[i]);     // 当前元素加入集合
+            backTrack(nums, i+1);
+            path.pop_back();
+        }
+    }
+public:
+    vector<vector<int>> subsets(vector<int>& nums) {
+        res.clear();path.clear();
+        backTrack(nums, 0);
+        return res;
+    }
+};
+
+// 16. 回溯-T17.电话号码的字母组合
+/* 给定一个仅包含数字 2-9 的字符串，返回所有它能表示的字母组合。答案可以按 任意顺序 返回。
+ 给出数字到字母的映射如下（与电话按键相同）。注意 1 不对应任何字母。*/
+
+class Solution_16{
+private:
+    const string letterMap[10]={
+        "",     // 0
+        "",     // 1
+        "abc",  // 2
+        "def",  // 3
+        "ghi",  // 4
+        "jkl",  // 5
+        "mno",  // 6
+        "pqrs", // 7
+        "tuv",  // 8
+        "wxyz", // 9
+    };
+    vector<string>res;
+    string path;
+    
+    void backTrack(const string &digits, int index) {   // index为当前遍历到的元素
+        if(index==digits.size()){       // 终止条件
+            res.push_back(path);
+            return;
+        }
+        string letters=letterMap[digits[index]-'0'];    // 当前数字对应的可选字符
+        for(int i=0;i<letters.size();i++){
+            path.push_back(letters[i]);
+            backTrack(digits, index+1);     // 递归
+            path.pop_back();                // 回溯
+        }
+    }
+public:
+    vector<string> letterCombinations(string digits) {
+        res.clear();path.clear();
+        if(digits.size()==0) return res;
+        backTrack(digits, 0);
+        return res;
+    }
+};
+
+// 17. 回溯-T39.组合总和
+/*
+ 给你一个 无重复元素 的整数数组 candidates 和一个目标整数 target ，找出 candidates 中可以使数字和为目标数 target 的 所有 不同组合 ，并以列表形式返回。你可以按 任意顺序 返回这些组合。
+ candidates 中的 同一个 数字可以 无限制重复被选取 。如果至少一个数字的被选数量不同，则两种组合是不同的。
+ 对于给定的输入，保证和为 target 的不同组合数少于 150 个。 */
+class Solution_17{
+private:
+    vector<vector<int>>res;
+    vector<int>path;
+    
+    void backTrack(vector<int> &candidates, int target, int sum, int startIndex){
+        if(sum==target){
+            res.push_back(path);
+            return;
+        }
+        for(int i=startIndex;i<candidates.size() && sum+candidates[i]<=target;i++){
+            sum+=candidates[i];
+            path.push_back(candidates[i]);
+            backTrack(candidates, target, sum, i);  // 依然是i，表示可以重复读取当前的数
+            sum-=candidates[i];
+            path.pop_back();
+        }
+    }
+public:
+    vector<vector<int>> combinationSum(vector<int>& candidates, int target){
+        res.clear();path.clear();
+        sort(candidates.begin(), candidates.end());
+        backTrack(candidates, target, 0, 0);
+        return res;
+    }
+};
+
+// 18. 回溯-T22.括号生成
+/* 数字 n 代表生成括号的对数，请你设计一个函数，用于能够生成所有可能的并且 有效的 括号组合。 */
+class Solution_18{
+private:
+    vector<string>res;
+    string s;
+    
+    void backTrack(int left, int right, int n){     // left为当前已有的左括号个数；right为当前已有的右括号个数
+        if(s.size()==2*n){
+            res.push_back(s);
+            return;
+        }
+        if(left<right){
+            return;
+        }else{
+            if(left<n){
+                s.push_back('(');
+                backTrack(left+1, right, n);
+                s.pop_back();
+            }
+            if(right<n){
+                s.push_back(')');
+                backTrack(left, right+1, n);
+                s.pop_back();
+            }
+        }
+    }
+public:
+    vector<string> generateParenthesis(int n) {
+        res.clear();s.clear();
+        backTrack(0, 0, n);
+        return res;
+    }
+};
+
+// 19. 回溯-T39.单词搜索
+/* 给定一个 m x n 二维字符网格 board 和一个字符串单词 word 。如果 word 存在于网格中，返回 true ；否则，返回 false 。
+ 单词必须按照字母顺序，通过相邻的单元格内的字母构成，其中“相邻”单元格是那些水平相邻或垂直相邻的单元格。同一个单元格内的字母不允许被重复使用。*/
+
+/*
+ check(i, j, k)表示: 从board[i][j]出发，是否能找到word[k...]，即word从第k个字符开始的后缀子串
+ */
+class Solution_19{
+private:
+    vector<vector<bool>> visited;
+    
+    void init(int m, int n){
+        visited=vector<vector<bool>>(m, vector<bool>(n, false));
+    }
+    
+    bool check(vector<vector<char>>& board, string word, int i, int j, int k){
+        if(board[i][j]!=word[k]){
+            return false;
+        }else if(k==word.length()-1){
+            return true;
+        }
+        visited[i][j]=true;
+        vector<pair<int, int>> directions={{0, 1}, {0, -1}, {1,0}, {-1, 0}};
+        bool found=false;
+        for(const auto &dir:directions){
+            int nextX=i+dir.first, nextY=j+dir.second;
+            if(0<=nextX && nextX<board.size() && 0<=nextY && nextY<board[0].size()){
+                if(!visited[nextX][nextY]){
+                    bool flag=check(board, word, nextX, nextY, k+1);
+                    if(flag){
+                        found=true;break;
+                    }
+                }
+            }
+        }
+        visited[i][j]=false;
+        return found;
+    }
+public:
+    bool exist(vector<vector<char>>& board, string word) {
+        int m=board.size(), n=board[0].size();
+        init(m, n);
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                bool flag=check(board, word, i, j, 0);
+                if(flag) return true;
+            }
+        }
+        return false;
+    }
+};
+
+// 20. 回溯-T131.分割回文串
+/* 给你一个字符串 s，请你将 s 分割成一些 子串，使每个子串都是 回文串 。返回 s 所有可能的分割方案。*/
+class Solution_20{
+private:
+    vector<vector<string>>res;
+    vector<string>path;
+    vector<vector<bool>>isPalindrome;
+    
+    void computePalindrome(const string &s){
+        // s[i,j]是回文串的充要条件：s[i]==s[j], s[i+1, j-1]是回文串
+        isPalindrome.resize(s.size(), vector<bool>(s.size(), false));
+        for(int i=s.size()-1;i>=0;i--){     // i倒序遍历：确保i+1已经计算过
+            for(int j=i;j<s.size();j++){
+                if(i==j) isPalindrome[i][j]=true;
+                else if(j==i+1) isPalindrome[i][j]=(s[i]==s[j]);
+                else{
+                    isPalindrome[i][j]=(s[i]==s[j] && isPalindrome[i+1][j-1]);
+                }
+            }
+        }
+    }
+    
+    void backTrack(const string &s, int startIndex){
+        // 1. 终止条件
+        if(startIndex>=s.size()){
+            res.push_back(path);
+            return;
+        }
+        // 2. 遍历切割点
+        for(int i=startIndex;i<s.size();i++){
+            if(!isPalindrome[startIndex][i]){
+                continue;
+            }
+            string str=s.substr(startIndex, i-startIndex+1);
+            path.push_back(str);
+            backTrack(s, i+1);
+            path.pop_back();    // 回溯
+        }
+    }
+    
+public:
+    vector<vector<string>> partition(string s){
+        res.clear();path.clear();
+        computePalindrome(s);
+        backTrack(s, 0);
+        return res;
+    }
+};
+
+
 int main(int argc, const char * argv[]) {
     // insert code here...
     std::cout << "Hello, World!\n";
     return 0;
 }
+

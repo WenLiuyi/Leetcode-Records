@@ -2089,21 +2089,21 @@ public:
 * 模版：for循环是横向遍历，backtracking（递归）是纵向遍历
     ```cpp
     void backtracking(参数) {
-    if (终止条件) {
-        存放结果;
-        return;
-    }
+      if (终止条件) {
+          存放结果;
+          return;
+      }
     
-    for (选择：本层集合中元素（树中节点孩子的数量就是集合的大小）) {
-        处理节点;
-        backtracking(路径，选择列表); // 递归
-        回溯，撤销处理结果
-    }
+      for (选择：本层集合中元素（树中节点孩子的数量就是集合的大小）) {
+          处理节点;
+          backtracking(路径，选择列表); // 递归
+          回溯，撤销处理结果
+      }
     }
     ```
 
 ### 2. 适用场景
-组合问题和排列问题是在树形结构的叶子节点上收集结果；而子集问题就是取树上所有节点的结果。
+组合问题和排列问题是在树形结构的**叶子节点**上收集结果；而子集问题就是取树上所有节点的结果。
 * 子集问题：
     * 时间复杂度：O(n*2^n)，每一个元素的状态有取与不取，所以时间复杂度为O(2^n)；构造每一组子集都需要填进数组，需要O(n)，最终时间复杂度：O(n × 2^n)
     * 空间复杂度：O(n)，递归深度为n，所以系统栈所用空间为O(n)
@@ -2119,7 +2119,7 @@ public:
     * 求多个集合之间的组合，各个集合之间相互不影响，那么就不用startIndex
 ##### 2.1.1 范围 [1, n] 中所有可能的 k 个数的组合--求同一个集合中的组合
 * 使用回溯，n相当于树的宽度，k相当于树的深度（递归解决多层嵌套循环问题）
-    1. 全局变量：res存储所有结果，path存储单一结果；参数：startIndex来记录下一层递归，搜索的起始位置（避免重复）
+    1. 全局变量：res存储所有结果，path存储单一结果；参数：**startIndex来记录下一层递归，搜索的起始位置（避免重复）**
     2. 终止条件：path数组的大小达到k
     * 时间复杂度: `O(n * 2^n)`
     * 空间复杂度: `O(n)`
@@ -2143,11 +2143,11 @@ public:
         }
     }
     public:
-    vector<vector<int>> combine(int n, int k) {
-        res.clear();path.clear();
-        backTrack(n, k, 1);
-        return res;
-    }
+        vector<vector<int>> combine(int n, int k) {
+            res.clear();path.clear();
+            backTrack(n, k, 1);
+            return res;
+        }
     };
     ```
 ##### 2.1.2 范围 [1, n] 中所有可能的 k 个数的组合--求不同集合之间的组合
@@ -2200,7 +2200,10 @@ public:
     backTrack(candidates, target, sum, i);  // 关键点:startIndex不用i+1了，表示可以重复读取当前的数
     ```
 
-##### 2.1.4 组合总和II
+* 首先对数字
+
+##### 2.1.4 组合总和II--不可重复选取
+
 * 给定一个候选人编号的集合 candidates 和一个目标数 target ，找出 candidates 中所有可以使数字和为 target 的组合。
  candidates 中的每个数字在每个组合中只能使用 一次 。注意：解集不能包含重复的组合。
 * 去重逻辑：
@@ -2272,11 +2275,34 @@ void computePalindrome(const string& s) {
 }
 ```
 
-###### 最少分割次数
-给你一个字符串 s，请你将 s 分割成一些子串，使每个子串都是回文串。
+###### 分割回文串II：最少分割次数
+> 给你一个字符串 s，请你将 s 分割成一些子串，使每个子串都是回文串。
+
 * 枚举分割出的最右边那段子串的长度, 即`s[0..i]` 分割出的最后一个回文串.
     * 状态转移方程：`f[i]=(0≤j<i)min{f[j]}+1`,其中 `s[j+1..i]` 是一个回文串
 * 时间复杂度：O(n^2)；空间复杂度：O(n^2)
+
+###### 分割回文串III：最少字符修改数
+
+> 给你一个由小写字母组成的字符串 s，和一个整数 k。
+>
+>  请你按下面的要求分割字符串：
+>
+> 1. 首先，你可以将 s 中的部分字符修改为其他的小写英文字母。
+>
+> 2. 接着，你需要把 s 分割成 k 个非空且不相交的子串，并且每个子串都是回文串。
+>
+> 3. 请返回以这种方式分割字符串所需修改的最少字符数。
+
+思路：动态规划: `f[i][j]`表示将`s[0,i-1]`（前i个字符）分割为j个回文串，所需要的最小修改次数.
+
+ 状态转移: `f[i][j]=min(f[t][j-1]+cost(s, t, i-1)`. `cost(s, t, i)`表示将`s[t, i-1]`组成的子串修改为回文串所需的最小次数
+
+ 优化：记`cost[i][j]=cost(s, i, j)`，有：
+
+1. `cost[i][j]=cost[i+1, j-1], if s[i]==s[j]`.
+2. `cost[i][j]=cost[i+1, j-1]+1, if s[i]!=s[j].`
+3. `cost[i][j]=0, if i>=j.`
 
 ##### 2.2.2 IP地址
 * 时间复杂度: O(3^4)，IP地址最多包含4个数字，每个数字最多有3种可能的分割方式，则搜索树的最大深度为4，每个节点最多有3个子节点。
@@ -2519,9 +2545,125 @@ public:
 };
 ```
 
+#### 2.6 单词搜索
+
+##### 2.6.1 单词搜索I
+
+> 给定一个 `m x n` 二维字符网格 `board` 和一个字符串单词 `word` 。如果 `word` 存在于网格中，返回 `true` ；否则，返回 `false` 。
+>
+> 单词必须按照字母顺序，通过相邻的单元格内的字母构成，其中“相邻”单元格是那些水平相邻或垂直相邻的单元格。同一个单元格内的字母不允许被重复使用。
+>
+> ![](word2.jpg)
+
+思路：**`check(i, j, k)`表示: 从`board[i][j]`出发，是否能找到`word[k...]`，即word从第k个字符开始的后缀子串**
+
+1. 如果`board[i][j]!=work[k]`，当前字符串不匹配，直接返回false；
+2. 如果当前已经访问到字符串末尾，且匹配，直接返回true；
+3. 遍历当前位置在各个方向上的相邻位置：能搜索到`word[k+1,...]`，返回true；搜索不到，返回false。
+
+* 时间复杂度上界：`O(mn*3^L)`
+
+##### 2.6.2 单词搜索II
+
+> 给定一个 m x n 二维字符网格 board 和一个单词（字符串）列表 words， 返回所有二维网格上的单词 。单词必须按照字母顺序，通过 相邻的单元格 内的字母构成，其中“相邻”单元格是那些水平相邻或垂直相邻的单元格。同一个单元格内的字母在一个单词中不允许被重复使用。
+
+思路：
+
+1. 与单词搜索I只找一个word相比，单词搜索II需要逐一比对所有words。每次遍历判断时间复杂度太大，改用字典树；
+2. 采用dfs，搜索满足条件的单元格
+3. 注意：同一个word可能在多个路径中出现，需要使用set去重
+
+* 时间复杂度：*O(mn3^(l-1))*，其中 *m* 是二维网格的高度，*n* 是二维网格的宽度，*l* 是最长单词的长度。
+* 空间复杂度：*O(kl)*，其中*k*是words的长度，*l*是最长单词的长度。
+
+``` c++
+struct TrieNode{
+    string word;        // 只有叶子节点才有值
+    unordered_map<char, TrieNode *>children;    // 通过哈希表记录
+    TrieNode(){
+        this->word="";
+    }
+};
+class Solution_16{
+private:
+    void insertTrieNode(TrieNode *root, const string &word){
+        TrieNode *cur=root;
+        for(const auto &ch:word){
+            if(!cur->children.contains(ch)){
+                cur->children[ch]=new TrieNode();
+            }
+            cur=cur->children[ch];
+        }
+        cur->word=word;     // 叶子节点
+    }
+    
+    vector<vector<bool>> visited;
+    set<string>res;
+    void init(int m, int n){
+        visited=vector<vector<bool>>(m, vector<bool>(n, false));
+    }
+    
+    vector<pair<int, int>>directions={{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
+    void backTrack(vector<vector<char>>& board, TrieNode *pre, int i, int j){   // 进入之前，used[i][j]已经设置为true
+        // 从board[i][j]开始遍历:到cur的当前路径是否是某个word的前缀
+        // 1. 终止条件
+        char ch=board[i][j];
+        if(!pre->children.contains(ch)){
+            return;
+        }
+        pre=pre->children[ch];      // 移动指向的节点
+        if(pre->word.size()>0){
+            res.insert(pre->word);   // 遍历到叶子节点，将当前word加入res
+            // 此处不要返回，可以再接着找（没说不同word不能共用相同的单元格）
+        }
+        // 2. 遍历，寻找下一个节点
+        for(const auto &dir:directions){
+            int nextX=i+dir.first, nextY=j+dir.second;
+            if(0<=nextX && nextX<board.size() && 0<=nextY && nextY<board[0].size()){
+                if(visited[nextX][nextY]){
+                    continue;   // 已经使用，跳过
+                }
+                visited[nextX][nextY]=true;
+                backTrack(board, pre, nextX, nextY);
+                visited[nextX][nextY]=false;
+            }
+        }
+    };
+    
+public:
+    vector<string>findWords(vector<vector<char>> &board, vector<string> &words){
+        // 1. 将words中所有单词插入Trie
+        TrieNode *root=new TrieNode();
+        for(const auto &word: words){
+            insertTrieNode(root, word);
+        }
+        int m=board.size(), n=board[0].size();
+        init(m, n);
+        
+        res.clear();
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                visited[i][j]=true;
+                backTrack(board, root, i, j);
+                visited[i][j]=false;
+            }
+        }
+        vector<string>ans;
+        for(const auto &word: res){
+            ans.push_back(word);
+        }
+        return ans;
+    }
+};
+```
+
+
+
 ## 贪心
+
 ### 1. 算法思想
 **选择每一阶段的局部最优，从而达到全局最优。**
+
 ### 2. 一些例子
 #### 2.1 序列问题
 
@@ -3516,6 +3658,13 @@ public:
 
 #### Trie（前缀树）
 
+> 实现 Trie 类：
+>
+> - `Trie()` 初始化前缀树对象。
+> - `void insert(String word)` 向前缀树中插入字符串 `word` 。
+> - `boolean search(String word)` 如果字符串 `word` 在前缀树中，返回 `true`（即，在检索之前已经插入）；否则，返回 `false` 。
+> - `boolean startsWith(String prefix)` 如果之前已经插入的字符串 `word` 的前缀之一为 `prefix` ，返回 `true` ；否则，返回 `false` 。
+
 * 时间复杂度：初始化O(1)，其余操作O(|S|), 其中|S|是每次插入或查询的字符串的长度；
 
 * 空间复杂度：O(|T|⋅Σ)，其中|T|为所有插入字符串的长度之和，Σ 为字符集的大小，本题 Σ=26.
@@ -3523,10 +3672,10 @@ public:
 ```c++
 class Trie{
 private:
-    vector<Trie*>children;
-    bool isEnd;
+    vector<Trie*>children;		// 可能的下一个字符
+    bool isEnd;								// 是否为单词的最后一个字符
     
-    Trie *searchPrefix(string prefix){
+    Trie *searchPrefix(string prefix){	// 返回：遍历完前缀prefix到达的节点
         Trie *cur=this;
         int n=prefix.size();
         for(int i=0;i<n;i++){
@@ -3563,6 +3712,23 @@ public:
     }
 };
 ```
+
+对比以下Trie构造方式：
+
+``` c++
+struct TrieNode {
+  	string word;		// 等同于isEnd：只有叶子节点才有值
+  	unordered_map<char,TrieNode *> children;
+  	// 上一种构造方式，采用cur->children[word[i]-'a']找到对应子节点；这里采用哈希表
+    TrieNode() {
+        this->word = "";
+    }
+}
+```
+
+
+
+
 
 #### Huffman编码
 
