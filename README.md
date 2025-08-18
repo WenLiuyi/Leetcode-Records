@@ -1144,11 +1144,13 @@ public:
 ```
 #### 2.2 三数之和
 > 给你一个整数数组 nums ，判断是否存在三元组 [nums[i], nums[j], nums[k]] 满足 i != j、i != k 且 j != k ，同时还满足 nums[i] + nums[j] + nums[k] == 0 。请你返回所有和为 0 且不重复的三元组。
+思路：使用双指针：首先将数组排序，然后有一层for循环，i从下标0的地方开始，同时定一个下标left 定义在i+1的位置上，定义下标right 在数组结尾的位置上。
+
+如果nums[i] + nums[left] + nums[right] > 0 ，left向右移动；如果 nums[i] + nums[left] + nums[right] < 0 ，right向左移动。
+
+* 时间复杂度：O(n^2)；空间复杂度：O(1)
+
 ```C
-// 使用双指针：首先将数组排序，然后有一层for循环，i从下标0的地方开始，同时定一个下标left 定义在i+1的位置上，定义下标right 在数组结尾的位置上。
-// 如果nums[i] + nums[left] + nums[right] > 0 ，left向右移动；
-// 如果 nums[i] + nums[left] + nums[right] < 0 ，right向左移动。
-// 时间复杂度：O(n^2)；空间复杂度：O(1)
 class Solution_6 {
 public:
     vector<vector<int>> threeSum(vector<int>& nums) {
@@ -1180,6 +1182,19 @@ public:
 > 四数之和的双指针解法是两层for循环nums[k] + nums[i]为确定值，依然是循环内有left和right下标作为双指针，找出nums[k] + nums[i] + nums[left] + nums[right] == target的情况，三数之和的时间复杂度是O(n^2)，四数之和的时间复杂度是O(n^3) 。
 
 * `std::unordered_set`底层实现为哈希表，`std::set` 和`std::multiset` 的底层实现是红黑树。红黑树是一种平衡二叉搜索树，所以key值是有序的，但key不可以修改，改动key值会导致整棵树的错乱，所以只能删除和增加。
+
+* 变式：最接近的三数之和
+
+  * 思路：仿照三数之和，先排序，转为双指针问题；采用一个新变量 minDiff 维护 |sum-target|的值
+
+    3个剪枝优化：
+
+    1. sum=nums[i]+nums[i+1]+nums[i+2], sum>target, 不会找到更优答案，跳出外层循环；
+
+    2. sum=nums[i]+nums[n-2]+nums[n-1], sum<target, 对于nums[i]无需再跑；
+
+    3. nums[i]=nums[i-1], nums[i]和之后数字相加的结果必然已经算过（对a去重）。
+
 
 #### 2.3 最长连续序列
 
@@ -2200,7 +2215,7 @@ public:
     backTrack(candidates, target, sum, i);  // 关键点:startIndex不用i+1了，表示可以重复读取当前的数
     ```
 
-* 首先对数字
+* 首先对数组排序
 
 ##### 2.1.4 组合总和II--不可重复选取
 
@@ -2210,7 +2225,7 @@ public:
     1. 树层去重：集合candidates中包含相同元素，要去除同一树层上使用过的元素：如果`candidates[i] == candidates[i - 1]` 并且 `used[i - 1] == false`，就说明：前一个树枝，使用了`candidates[i - 1]`，也就是说同一树层使用过`candidates[i - 1]`.
     * 在`candidates[i] == candidates[i - 1]`相同的情况下：
         * `used[i - 1] == true`，说明同一树枝`candidates[i - 1]`使用过；
-        * `used[i - 1] == false`，说明同一树层`candidates[i - 1]`使用过
+        * `used[i - 1] == false`，说明同一树层`candidates[i - 1]`使用过。
     2. 树枝无需去重：同一树枝上的都是一个组合里的元素，不用去重
     ![alt text](20221021163812.png)
 ```cpp
@@ -2455,7 +2470,8 @@ private:
             res.push_back(chessBoard);
             return;
         }
-        for(int col=0;col<n;col++){     // 检查(row,col)处是否可以放置棋子
+        for(int col=0;col<n;col++){     // 对于当前row，考虑将棋子放在每列上的可能性
+          // 检查(row, col)处是否可以放棋子：无需考虑row更大的行（还没有遍历到）
             if(isValid(chessBoard, n, row, col)){
                 chessBoard[row][col]='Q';   // 放置棋子
                 backTrack(chessBoard, n, row+1);
@@ -2669,8 +2685,112 @@ public:
 
 #### 2.2 买卖股票问题
 
+
+
 #### 2.3 区间问题
-##### 2.3.1 跳跃游戏
+
+几个经典的区间问题：汇总区间，合并区间，插入区间，用最少数量的箭引爆气球
+
+关键点：**区间的排序**
+
+##### 2.3.1合并区间
+
+> 以数组 intervals 表示若干个区间的集合，其中单个区间为 intervals[i] = [starti, endi] 。请你合并所有重叠的区间，并返回 一个不重叠的区间数组，该数组需恰好覆盖输入中的所有区间 。
+
+* 思路：按左端点升序排序
+
+  ``` c++
+  class Solution_2 {
+  public:
+      vector<vector<int>> merge(vector<vector<int>>& intervals) {
+          vector<vector<int>> ret;
+          int n=intervals.size();
+          if(n==0) return ret;
+          
+          sort(intervals.begin(),intervals.end());
+          for(int i=0;i<n;i++){
+              if(ret.size()==0 || ret.back()[1]<intervals[i][0]){
+                  // 1. ret中最后一个区间的右端点 < 当前区间的左端点：新增一个区间
+                  ret.push_back({intervals[i][0],intervals[i][1]});
+              }else{
+                  // 2. ret最后一个区间与当前区间合并
+                  ret.back()[1]=max(ret.back()[1],intervals[i][1]);
+              }
+          }
+          return ret;
+      }
+  };
+  ```
+
+  
+
+##### 2.3.2 用最少数量的箭引爆气球
+
+> 在二维空间中有许多球形的气球。对于每个气球，提供的输入是水平方向上，气球直径的开始和结束坐标。由于它是水平的，所以纵坐标并不重要，因此只要知道开始和结束的横坐标就足够了。开始坐标总是小于结束坐标。
+>
+> 一支弓箭可以沿着 x 轴从不同点完全垂直地射出。在坐标 x 处射出一支箭，若有一个气球的直径的开始和结束坐标为 xstart，xend， 且满足  xstart ≤ x ≤ xend，则该气球会被引爆。可以射出的弓箭的数量没有限制。 弓箭一旦被射出之后，可以无限地前进。我们想找到使得所有气球全部被引爆，所需的弓箭的最小数量。
+>
+> 给你一个数组 points ，其中 points [i] = [xstart,xend] ，返回引爆所有气球所必须射出的最小弓箭数。
+
+局部最优：当气球出现重叠时，一起射所用弓箭最少；
+
+全局最优：将所有气球射爆所用的弓箭数最少。
+
+思路：求区间的交集；射出位置，当前可引爆的所有区间中，右边界的最小值
+
+> ![452.用最少数量的箭引爆气球](https://file1.kamacoder.com/i/algo/20201123101929791.png)
+
+```c++
+class Solution_4 {
+public:
+    int findMinArrowShots(vector<vector<int>>& points) {
+        if(points.size()==0) return 0;
+        sort(points.begin(),points.end(),[](const vector<int>&p1,const vector<int>&p2){
+            return p1[1]<p2[1];     // 按右边界升序排序
+        });
+        int pos=points[0][1],ans=1;
+        for(const vector<int> &ballon:points){
+            if(ballon[0]>pos){      // 当前区间左端点超过pos，不能引爆：此时开一个新的引爆点
+                pos=ballon[1];
+                ans++;
+            }
+        }
+        return ans;
+    }
+};
+```
+
+###### 变式：无重叠区间（本质都是求“非交叉区间”的数量）
+
+> 给定一个区间的集合 intervals ，其中 intervals[i] = [starti, endi] 。返回 需要移除区间的最小数量，使剩余区间互不重叠 。
+>
+> 注意 只在一点上接触的区间是 不重叠的。例如 [1, 2] 和 [2, 3] 是不重叠的。
+
+思路：与"用最少数量的箭引爆气球"非常相像，弓箭的数量等于**非交叉区间的数量**（只要将射爆气球的判断条件加一个等号）
+
+###### 变式：划分字母区间
+
+> 字符串 S 由小写字母组成。我们要把这个字符串划分为尽可能多的片段，同一字母最多出现在一个片段中。返回一个表示每个字符串片段的长度的列表。
+>
+>  示例：
+>
+>  输入：S = "ababcbacadefegdehijhklij"
+>
+>  输出：[9,7,8] 解释： 划分结果为 "ababcbaca", "defegde", "hijhklij"。 每个字母最多出现在一个片段中。 像 "ababcbacadefegde", "hijhklij" 的划分是错误的，因为划分的片段数较少。
+>
+>  提示：
+>
+>  S的长度在[1, 500]之间。
+>
+>  S只包含小写字母 'a' 到 'z' 。
+
+思路一：如何把同一字母都圈在同一个区间内呢？寻找每一个字母最后出现的下标位置
+
+* 贪心的思想：从头开始，寻找每个片段可能的最小结束下标。遍历时更新：`right=max(right, map[s[i]]);`当`i==right`找到当前区间的右边界。
+
+思路二：转化为非交叉区间的问题：统计每个字母出现的左右边界。然后将所有区间划分为互不重叠的组（按左边界升序排序）
+
+##### 2.3.2 跳跃游戏
 * 给你一个非负整数数组 `nums` ，你最初位于数组的 第一个下标。数组中的每个元素代表你在该位置可以跳跃的最大长度。判断你是否能够到达最后一个下标，如果可以，返回 `true` ；否则，返回 `false`。
     * 每次更新可覆盖的最大范围`cover`
 ```cpp
@@ -3835,40 +3955,6 @@ int main() {
     return 0;
 }
 ```
-
-
-
-## 区间
-
-几个经典的区间问题：汇总区间，合并区间，插入区间，用最少数量的箭引爆气球
-
-关键点：区间的排序（合并区间：按左端点升序排序；
-
-> T452.用最少数量的箭引爆气球
->
-> 思路：求区间的交集；射出位置，当前可引爆的所有区间中，右边界的最小值
-
-```c++
-class Solution_4 {
-public:
-    int findMinArrowShots(vector<vector<int>>& points) {
-        if(points.size()==0) return 0;
-        sort(points.begin(),points.end(),[](const vector<int>&p1,const vector<int>&p2){
-            return p1[1]<p2[1];     // 按右边界升序排序
-        });
-        int pos=points[0][1],ans=1;
-        for(const vector<int> &ballon:points){
-            if(ballon[0]>pos){      // 当前区间左端点超过pos，不能引爆：此时开一个新的引爆点
-                pos=ballon[1];
-                ans++;
-            }
-        }
-        return ans;
-    }
-};
-```
-
-
 
 
 

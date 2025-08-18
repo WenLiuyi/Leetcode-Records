@@ -167,12 +167,64 @@ public:
     }
 };
 
-// 7. 四数之和
+// 7. T16.最接近的三数之和
+/* 给你一个长度为 n 的整数数组 nums 和 一个目标值 target。请你从 nums 中选出三个整数，使它们的和与 target 最接近。
+ 返回这三个数的和。
+ 假定每组输入只存在恰好一个解。*/
+// 思路：仿照三数之和，先排序，转为双指针问题；采用一个新变量 minDiff 维护 |sum-target|的值
+// 3个剪枝优化：
+// 1. sum=nums[i]+nums[i+1]+nums[i+2], sum>target, 不会找到更优答案，跳出外层循环；
+// 2. sum=nums[i]+nums[n-2]+nums[n-1], sum<target, 对于nums[i]无需再跑；
+// 3. nums[i]=nums[i-1], nums[i]和之后数字相加的结果必然已经算过。
+class Solution_7{
+public:
+    int threeSumClosest(vector<int>&nums, int target){
+        vector<vector<int>> res;
+        sort(nums.begin(), nums.end());     // 升序排列
+        int minDiff=INT_MAX, n=nums.size(), ans=0;
+        
+        for(int i=0;i<n;i++){
+            if(i>0 && nums[i]==nums[i-1]) continue;     // 剪枝三（对a去重）
+            if(i+2<n && nums[i]+nums[i+1]+nums[i+2]>target){        // 剪枝一
+                if(minDiff>(nums[i]+nums[i+1]+nums[i+2])-target){
+                    minDiff=(nums[i]+nums[i+1]+nums[i+2])-target;ans=nums[i]+nums[i+1]+nums[i+2];
+                }
+                break;
+            }
+            if(i<n-2 && nums[i]+nums[n-1]+nums[n-2]<target){        // 剪枝二
+                if(minDiff>target-(nums[i]+nums[n-1]+nums[n-2])){
+                    minDiff=target-(nums[i]+nums[n-1]+nums[n-2]);ans=nums[i]+nums[n-1]+nums[n-2];
+                }
+                continue;
+            }
+            
+            int left=i+1, right=n-1;
+            while(left<right){
+                int sum=nums[i]+nums[left]+nums[right];
+                if(sum==target) return target;
+                else if(sum<target){
+                    if(minDiff>target-sum){
+                        minDiff=target-sum;ans=sum;
+                    }
+                    left++;
+                }else{
+                    if(minDiff>sum-target){
+                        minDiff=sum-target;ans=sum;
+                    }
+                    right--;
+                }
+            }
+        }
+        return ans;
+    }
+};
+
+// 8. 四数之和
 /*给你一个由 n 个整数组成的数组 nums ，和一个目标值 target 。请你找出并返回满足下述全部条件且不重复的四元组 [nums[a], nums[b], nums[c], nums[d]] （若两个四元组元素一一对应，则认为两个四元组重复）：
  0 <= a, b, c, d < n
  a、b、c 和 d 互不相同
  nums[a] + nums[b] + nums[c] + nums[d] == target*/
-class Solution_7 {
+class Solution_8 {
 public:
     vector<vector<int>> fourSum(vector<int>& nums, int target) {
         vector<vector<int>> res;
@@ -207,7 +259,7 @@ public:
     }
 };
 
-// 8. 四数相加II
+// 9. 四数相加II
 /*给你四个整数数组 nums1、nums2、nums3 和 nums4 ，数组长度都是 n ，请你计算有多少个元组 (i, j, k, l) 能满足：
  0 <= i, j, k, l < n
  nums1[i] + nums2[j] + nums3[k] + nums4[l] == 0*/
@@ -216,7 +268,7 @@ public:
 // 思路：定义unordered_map,key为a,b两数之和,value为a+b两数之和出现的次数。
 
 // 时间复杂度：O(n^2)；空间复杂度：O(n^2)
-class Solution_8 {
+class Solution_9 {
 public:
     int fourSumCount(vector<int>& nums1, vector<int>& nums2, vector<int>& nums3, vector<int>& nums4) {
         unordered_map<int,int>map;
@@ -238,14 +290,14 @@ public:
     }
 };
 
-// 9. T383.赎金信:
+// 10. T383.赎金信:
 /*给你两个字符串：ransomNote 和 magazine ，判断 ransomNote 能不能由 magazine 里面的字符构成。
  如果可以，返回 true ；否则返回 false .
  magazine 中的每个字符只能在 ransomNote 中使用一次。
  */
 // 思路：用数组记录magazine中，每个小写字母的出现次数
 // 时间复杂度：O(n)；空间复杂度:O(1)
-class Solution_9 {
+class Solution_10 {
 public:
     bool canConstruct(string ransomNote, string magazine) {
         int record[26]={0};
@@ -261,13 +313,13 @@ public:
     }
 };
 
-// 10. T128. 最长连续序列:
+// 11. T128. 最长连续序列:
 /* 给定一个未排序的整数数组 nums ，找出数字连续的最长序列（不要求序列元素在原数组中连续）的长度。
  请你设计并实现时间复杂度为 O(n) 的算法解决此问题。
  */
 // 思路：先使用hashSet去重；逐个遍历hashSet中的元素num，如果num-1在hashSet中，说明已经统计过（去重）；否则从num开始，依次判断num+1, ..., num+k是否存在
 // 时间复杂度：O(n)；空间复杂度：O(n)
-class Solution_10{
+class Solution_11{
 public:
     int longestConsecutive(vector<int>&nums){
         unordered_set<int>numSet;
@@ -289,6 +341,8 @@ public:
         return longestStreak;
     }
 };
+
+
 
 int main(int argc, const char * argv[]) {
     // insert code here...
